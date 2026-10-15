@@ -1,7 +1,7 @@
 import { normalizeState } from '../domain/triage'
 import { SCHEMA_VERSION } from '../domain/types'
 import type { AppState, NormalizationDiagnostic } from '../domain/types'
-import { buildSeedState } from './seed'
+import { buildSeed } from './seed'
 
 export const STORAGE_KEY = `missiva.mailbox.v${SCHEMA_VERSION}`
 
@@ -38,6 +38,12 @@ export function createRepository(getStorage: StorageAccess = () => window.localS
     publish([{ code: 'storage-unavailable', operation, message: "Changes won't be saved this session" }])
   }
 
+  function loadSeed(): AppState {
+    const result = buildSeed()
+    publish(result.diagnostics)
+    return result.state
+  }
+
   function persist(state: AppState, operation: 'save' | 'reset') {
     memory = structuredClone(state)
     if (!persistent) return
@@ -55,18 +61,18 @@ export function createRepository(getStorage: StorageAccess = () => window.localS
       try {
         raw = getStorage().getItem(STORAGE_KEY)
       } catch {
-        memory = buildSeedState()
+        memory = loadSeed()
         storageFailed('load')
         return structuredClone(memory)
       }
       if (raw === null) {
-        memory = buildSeedState()
+        memory = loadSeed()
       } else {
         let input: unknown
         try {
           input = JSON.parse(raw)
         } catch {
-          memory = buildSeedState()
+          memory = loadSeed()
           publish([{ code: 'seed-restored', reason: 'invalid-json', message: 'Restored sample mailbox' }])
           return structuredClone(memory)
         }
@@ -80,7 +86,7 @@ export function createRepository(getStorage: StorageAccess = () => window.localS
       persist(state, 'save')
     },
     reset() {
-      const state = buildSeedState()
+      const state = loadSeed()
       persist(state, 'reset')
       return state
     },

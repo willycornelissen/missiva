@@ -245,7 +245,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | IMBOX-02 | P1: The Imbox | T4 core / T15 UI | Implementing |
 | IMBOX-03 | P1: The Imbox | T4 core / T14-T15 UI | Implementing |
 | IMBOX-04 | P1: The Imbox | T4 selector / T15 UI | Implementing |
-| IMBOX-05 | P1: The Imbox | T9-T11 guard/repository/store complete / T20 notice | Implementing |
+| IMBOX-05 | P1: The Imbox | T9-T11 guard/repository/store complete / T20 notice / T22 seed fallback repair complete | Implementing |
 | SCRN-01 | P1: The Screener | T5 core / T16 UI / T21 reset-reader repair complete | Implementing |
 | SCRN-02 | P1: The Screener | T5 core / T16 UI | Implementing |
 | SCRN-03 | P1: The Screener | T5 core / T16 UI | Implementing |
@@ -337,6 +337,13 @@ T21 repairs F1: reset after approving/opening a pending sender removes the
 ineligible Imbox reader, restores the complete persisted seed, and returns the
 sender to Screener. Ordinary open-to-seen still keeps the reader open. Full
 build + lint + 162 tests passed; independent re-verification remains pending.
+T22 repairs F2's malformed/missing-field edge for raw bundled mail, including
+unknown sender references before dereference. Healthy records retain original
+IDs/timestamps; first load, every fallback, repository reset and real-shell
+reset expose skip diagnostics through repository logging/notices. Shared pure
+guards introduce no dependency cycle; core stays side-effect-free. Full build
++ lint + 192 tests passed, including all original 161 tests. Independent
+re-verification remains pending; no Verified status is claimed.
 
 ---
 

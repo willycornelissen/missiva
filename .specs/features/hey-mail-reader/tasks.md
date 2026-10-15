@@ -1279,14 +1279,53 @@ AppStore.tsx, new seed-validation.test.tsx, README.md, design.md, tasks.md, spec
 
 **Done when**:
 
-- [ ] Raw missing/invalid fields and unknown senders are skipped before constructing mail, without import-time failure; healthy records retain complete values and source-index IDs.
-- [ ] First load, invalid JSON/version/envelope fallback, storage failure, and repository reset expose exact skip diagnostics and log payloads while retaining healthy state.
-- [ ] Real-shell startup and Reset demo publish nonblocking skip notices, preserve healthy mail, and durably reset without side effects in the pure core.
-- [ ] Existing valid seed, persisted-state normalization, store behavior and all original tests remain intact.
+- [x] Raw missing/invalid fields and unknown senders are skipped before constructing mail, without import-time failure; healthy records retain complete values and source-index IDs.
+- [x] First load, invalid JSON/version/envelope fallback, storage failure, and repository reset expose exact skip diagnostics and log payloads while retaining healthy state.
+- [x] Real-shell startup and Reset demo publish nonblocking skip notices, preserve healthy mail, and durably reset without side effects in the pure core.
+- [x] Existing valid seed, persisted-state normalization, store behavior and all original tests remain intact.
 
 **Tests**: unit (seed/core/repository plus real-shell RTL reset diagnostic regression)
 **Gate**: full; targeted `npm test -- src/data src/domain/normalize.test.ts src/state/AppStore.test.tsx`, then `npm run build && npm run lint && npm test`
 **Commit**: `fix(data): validate bundled mail and report seed diagnostics`
+
+**Execution evidence (T22)**: Test-first RED reproduced import-time
+`sender.decision` failure at `seed.ts:22` with only bundled JSON mocked.
+The new suite adds 30 cases: import/core reset, 18 raw-record variants, two
+pure normalization fallbacks, seven repository entry paths, and two real-shell
+notice flows. Targeted gate: 111 passed. Initial build caught a guard narrowing
+type error; retaining `Record<string, unknown>` in the content type predicate
+fixed it without changing tests. Repeated full gate: build + lint + 192 tests,
+17 files, zero failed/skipped. Original 161 and T21's regression remain intact.
+
+The shared guard has type-only model dependencies; seed imports that guard,
+and triage imports both, with no import cycle. Seed/core return diagnostics;
+repository alone logs/publishes. Store reset calls the repository at the event
+boundary, never during a reducer, then installs its returned state through a
+pure internal action. README/design document this corrected reset contract.
+
+| Criterion (A) | Exact assertion evidence (`src/data/seed-validation.test.tsx`) | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Import/core reset safe; healthy fields and stable IDs | `:34` `expect(state.order).toEqual(['mail-01', 'mail-04'])`; `:35-44` `expect(state.emails).toEqual({...})` enumerates both complete records, including source-index IDs/timestamps, sender, subject, snippet, body, seen, box, originBox and pile; invoked for eager seed/factory/core reset at `:49-52` | Malformed/missing-field edge skips bad records, retains complete healthy records without renumbering | Yes |
+| Each raw required field and unknown sender | `:72-79` `expect(state.order).toEqual(['mail-01', 'mail-03'])`; `expect(Object.values(state.emails).map((email) => email.subject)).toEqual(['Healthy first', 'Healthy last'])`; `expect(state.emails['mail-03']).toEqual({...fixture.last, id:'mail-03', receivedAt:'2026-10-01T20:00:00.000Z', seen:true, box:'imbox', originBox:'imbox', pile:null})`; `expect(repo.getNotices()).toEqual([skipped('mail-02')])`; `expect(vi.mocked(console.warn).mock.calls).toEqual([[skipped('mail-02').message, skipped('mail-02')]])` | All four raw fields missing/null/wrong-type; invalid records and unknown/prototype/blank sender skipped with exact warning payload | Yes |
+| Pure fallback diagnostics | `:88-92` `expect(result.restoredSeed).toBe(true)`; `expect(result.diagnostics).toEqual([{code:'seed-restored', reason, message:'Restored sample mailbox'}, ...skips])`; `expect(console.warn).not.toHaveBeenCalled()`; healthy payload helper `:34-44` invoked at `:87` | IMBOX-05 and malformed edge compose; no logging from core | Yes |
+| First load, JSON/version/envelope fallback, storage access/read failure, reset | `:125-129` `expect(repo.getNotices()).toHaveLength(expected.length)`; `expect(repo.getNotices()).toEqual(expect.arrayContaining(expected))`; `expect(observed.at(-1)).toEqual(repo.getNotices())`; `expect(vi.mocked(console.warn).mock.calls).toHaveLength(expected.length)`; `expect(vi.mocked(console.warn).mock.calls).toEqual(expect.arrayContaining(expected.map((notice) => [notice.message, notice])))`; healthy payload `:34-44` invoked at `:118,130`; reset storage `:131` `expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(state)` | Exact skip payloads plus applicable restoration/storage notice, observable and logged; healthy state durably reset | Yes |
+| Real shell initial/reset warnings and usable healthy mail | `:142` initial reset-path notice absent; `:146` `expect(within(banner).getByText(notice.message)).toBeVisible()` for both skips; `:147` `expect(screen.getAllByRole('article').map((row) => row.getAttribute('aria-label'))).toEqual(['Healthy last', 'Healthy first'])`; `:148` complete stored-state helper `:34-44`; `:149-150` `expect(repo.getNotices()).toEqual(skips)` and exact log tuples; `:152-153` `expect(screen.getByTestId('email-body')).toHaveTextContent('Last body')`; `expect(banner).toBeVisible()` | No lost warning on UI reset, no bad mail, persisted healthy mail remains readable while notice stays nonblocking | Yes |
+| Existing behavior preserved | Unchanged `src/data/seed.test.ts:8` `expect(Object.keys(seed.emails)).toHaveLength(40)`; `src/data/repository.test.ts:28` `expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(state)`; `src/state/AppStore.test.tsx:56` `expect(currentState()).toEqual(beforeReload)`; all original tests included in 192-test gate | Valid seed, normalization and triage persistence unchanged | Yes |
+
+| Assertions (C, new suite unless noted) | Maps to | Keep |
+| --- | --- | --- |
+| `:34-44,49-53` exact healthy records/order and no core log | T22 import safety, stable IDs, pure reset; malformed edge | Yes |
+| `:72-79` healthy IDs/payload and exact identified skip/log | Malformed/missing-field edge, T22 unknown-sender validation | Yes |
+| `:87-92` healthy state, restored flag, combined diagnostics, no logging | IMBOX-05, malformed edge, AD-001 purity | Yes |
+| `:114-115,118,125-131` initial empty state/no warnings, exact notices/logs, subscription snapshot, healthy cached/reset state and persisted payload | T22 first load/fallback/reset, storage failure and observability | Yes |
+| `:142,146-153` absent initial notice, visible skip messages, exact rows, stored payload, logger/notices, usable reader with banner | T22 real-shell reset integration and nonblocking malformed-mail warning | Yes |
+| Existing `seed.test.ts:8`, `repository.test.ts:28`, `AppStore.test.tsx:56` above | T3/T10/T11 regression preservation | Yes |
+
+Adequacy A-D passed: full healthy payloads and exact diagnostic code/emailId/
+message checked, warning order left unspecified where the spec does not define
+it (exact membership plus length), no mock-only outcome claims. Every new
+case maps to this bounded repair; AD-004/co-location followed. No original
+tests changed, weakened, removed or skipped. Independent verification pending.
 
 ### T23: Specify newest-first Focus order (F3)
 

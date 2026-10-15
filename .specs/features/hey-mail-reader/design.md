@@ -99,9 +99,17 @@ No existing code to reuse — the project is empty. This design sets the convent
 
 - **Purpose**: ~40 realistic mock emails across personal/newsletter/receipt senders, some from unknown senders (for The Screener).
 - **Location**: `src/data/seed.ts`
-- **Interfaces**: `export const seed: AppState` (or a `buildSeedState()` factory).
-- **Dependencies**: Domain Models.
-- **Reuses**: none.
+- **Interfaces**: `seed: AppState`, `buildSeedState(): AppState`, and
+  `buildSeed(): { state: AppState; diagnostics: NormalizationDiagnostic[] }`.
+- **Dependencies**: Domain Models and pure content guards.
+- **Reuses**: `src/domain/validation.ts` shares record/string/content validation
+  with persisted-state normalization, without importing the triage core.
+- **Repair clarification (T22)**: Validate each raw bundled message before
+  sender dereference or construction. Skip malformed/missing fields and unknown
+  sender references, returning identified `malformed-email` diagnostics.
+  IDs/timestamps use the original source index, not a filtered-array index.
+  State-only helpers remain pure; repository load/reset use `buildSeed()` and
+  normalization fallback includes seed diagnostics.
 
 ### Storage Repository (`src/data/repository.ts`)
 
@@ -123,7 +131,9 @@ No existing code to reuse — the project is empty. This design sets the convent
   failure disables persistence for that instance. Initial load failure uses seed;
   later failed saves preserve the latest triage in memory, not a destructive
   mid-session reset. Reset persists a fresh seed without clearing unrelated keys.
-  Missing keys are silent; diagnostics remain observable through save and reset.
+  Missing keys with a healthy seed are silent; bundled skip diagnostics remain
+  observable on first load, all fallback paths, and reset, just like persisted
+  data diagnostics.
 
 ### AppStore (`src/state/AppStore.tsx`)
 
@@ -137,11 +147,16 @@ No existing code to reuse — the project is empty. This design sets the convent
 - **Reuses**: none.
 - **Execution clarification (T11)**: Provider accepts an optional stable
   `repository` prop for isolated tests. `useReducer` loads initial state; an
-  effect saves on mount and state changes. `RESET_SEED` follows the same pure
-  reducer/effect path rather than writing storage inside a reducer/dispatch.
+  effect saves on mount and state changes.
   `useSyncExternalStore` retains startup notices and observes failed saves
   without coupling UI to browser storage. Provider/hook exports share one
   public entry point, with a scoped Fast Refresh export-rule exception.
+- **Repair clarification (T22)**: The store intercepts `RESET_SEED` at the event
+  boundary and calls `repository.reset()` outside any reducer, preserving seed
+  skip diagnostics. A pure internal `RESTORE_SEED` action installs its returned
+  state; the ordinary save effect also observes that state. All other actions
+  use the unchanged pure triage reducer. Direct core `RESET_SEED` remains pure
+  and returns validated state. Views still only dispatch.
 
 ### HTML Sanitizer (`src/lib/sanitize.ts`)
 
@@ -211,7 +226,8 @@ No existing code to reuse — the project is empty. This design sets the convent
   SPEC_DEVIATION: warnings are returned as structured diagnostics, not logged by
   the core. T10/T11 adapters must log malformed-record warnings and retain notices
   for T20's non-blocking banner. This preserves AD-001's pure core.
-  Missing storage keys are not corruption; adapters use a fresh seed directly.
+  Missing storage keys are not corruption; adapters use a fresh validated seed
+  and report any bundled skip diagnostics without adding a corruption notice.
 
 ```typescript
 type SenderId = string
@@ -297,7 +313,7 @@ Conflict rule (spec edge case): applying `REPLY_LATER` to an email already in `s
 | Error Scenario | Handling | User Impact |
 | -------------- | -------- | ----------- |
 | Stored state has unknown `schemaVersion` (IMBOX-05) | Repository discards it, returns seed | Non-blocking banner: "Restored sample mailbox" |
-| Malformed/missing email field in seed | Core/loader skips the email, logs a console warning | Email absent; app keeps running |
+| Malformed/missing email field or unknown sender in seed | Pure loader skips before construction and returns diagnostics; repository logs/publishes them on load/fallback/reset | Bad email absent, healthy IDs stable, nonblocking notice; app keeps running |
 | Unsafe HTML in body | `sanitizeHtml` strips scripts/handlers before render | Clean body shown |
 | `localStorage` unavailable/full | Repository catches, runs in-memory from seed | Banner: "Changes won't be saved this session" |
 | Sender classified as both newsletter and personal | Routing defaults to `personal` → Imbox | Email appears in Imbox |

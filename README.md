@@ -67,7 +67,13 @@ outside that layer. Approved requirements and tasks live in
 
 `src/domain/types.ts` exports the mail/sender/action types and `SCHEMA_VERSION`.
 `src/data/seed.ts` exports `seed` and `buildSeedState()` (fresh, deterministic
-40-message state). The pure core in `src/domain/triage.ts` exports:
+40-message state for the valid bundle), plus `buildSeed()` returning
+`{ state, diagnostics }` for adapters. Raw bundled messages are validated before
+sender lookup or email construction; invalid fields and unknown senders produce
+`malformed-email` diagnostics. Healthy IDs and timestamps retain their original
+source indices even when earlier records are skipped. Shared pure content guards
+live in `src/domain/validation.ts`; neither seed building nor core normalization
+logs. The pure core in `src/domain/triage.ts` exports:
 
 - `reduce(state, action)` for all triage actions, including `RESET_SEED`.
 - `routeIncoming(state, email)` for a new message from a registered sender.
@@ -82,8 +88,9 @@ The repository/store adapter must surface `diagnostics`, not discard them:
 `malformed-email` / `malformed-sender` identify skipped records for warnings;
 `state-repaired` identifies order, routing, or Focus repair. The core never
 logs, accesses storage, or imports browser/React APIs. A missing storage key
-should load a fresh seed without a corruption notice; JSON parse and storage
-failures are adapter responsibilities.
+should load a fresh seed without a corruption notice; malformed bundled records
+still generate skip warnings. JSON parse and storage failures are adapter
+responsibilities. Normalization fallback includes seed skip diagnostics.
 
 Sender kinds can be a single kind or an array; personal wins over newsletter.
 Approved receipts use Imbox in P1 (Paper Trail UI is deferred). Focus completion
@@ -106,14 +113,14 @@ accessor returning `getItem`/`setItem`, so even access-denied getters are caught
   notices arrive. `subscribe(listener)` observes changes and returns unsubscribe.
   Read the snapshot after subscribing so load-time notices are not missed.
 
-All normalization diagnostics are logged with `console.warn(message, notice)`
-and retained for the UI. Invalid JSON adds `seed-restored` with
+All normalization and seed diagnostics are logged with `console.warn(message, notice)`
+and retained for the UI, including first load, fallback, and reset. Invalid JSON adds `seed-restored` with
 `reason: 'invalid-json'`. Storage failures add `storage-unavailable` with
 `operation: 'load' | 'save' | 'reset'` and the message
 `Changes won't be saved this session`. Fallback is sticky for that instance:
 loading starts from seed; a failed later write retains the latest triage rather
 than losing work. Reset still works in memory. Notices remain for the session,
-including after successful saves/reset; missing keys produce no notice.
+including after successful saves/reset; missing keys with a valid seed produce no notice.
 
 ## React store
 
@@ -122,10 +129,13 @@ including after successful saves/reset; missing keys produce no notice.
 It uses the browser `repository` by default; tests can supply an isolated
 `repository={createRepository(...)}`. Keep that adapter stable for the mount.
 
-The provider initializes from `load()`, delegates every `TriageAction` to the
-pure reducer, and saves on mount and every state change. Dispatch
-`{ type: 'RESET_SEED' }` to restore all seed fields and persist them through the
-same effect. Views must not access storage or call repository reset directly.
+The provider initializes from `load()`, delegates triage to the pure reducer,
+and saves on mount and every state change. Dispatch `{ type: 'RESET_SEED' }`
+to restore all seed fields. The store handles that event through
+`repository.reset()` outside the reducer, preserving seed diagnostics and
+persistence, then installs the returned state with a pure internal action.
+The ordinary save effect also sees the restored state. Views must not access
+storage or call repository reset directly.
 `useAppNotices()` subscribes to the repository's current notice snapshot,
 including startup repairs and failures arising during later save effects.
 The non-blocking `NoticeBanner` renders messages from this hook without

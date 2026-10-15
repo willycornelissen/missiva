@@ -1,6 +1,7 @@
-import { buildSeedState } from '../data/seed'
+import { buildSeed, buildSeedState } from '../data/seed'
 import { SCHEMA_VERSION } from './types'
 import type { AppState, BoxKind, Email, NormalizationDiagnostic, NormalizationResult, PileKind, Sender, TriageAction } from './types'
+import { isRecord, nonempty, validEmailContent } from './validation'
 
 function orderedEmails(state: AppState): Email[] {
   return [...state.order].reverse()
@@ -122,14 +123,6 @@ export function reduce(state: AppState, action: TriageAction): AppState {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function nonempty(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0
-}
-
 function oneOf<T extends string>(value: unknown, options: readonly T[]): value is T {
   return options.some((option) => option === value)
 }
@@ -147,9 +140,7 @@ function validSender(value: unknown, id: string): value is Sender {
 
 function validEmail(value: unknown, id: string, senders: AppState['senders']): value is Email {
   return isRecord(value) && nonempty(value.id) && value.id === id &&
-    nonempty(value.senderId) && Object.hasOwn(senders, value.senderId) &&
-    typeof value.subject === 'string' && typeof value.snippet === 'string' &&
-    typeof value.bodyHtml === 'string' && typeof value.seen === 'boolean' &&
+    validEmailContent(value, senders) && typeof value.seen === 'boolean' &&
     typeof value.receivedAt === 'string' &&
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value.receivedAt) &&
     Number.isFinite(Date.parse(value.receivedAt)) &&
@@ -158,10 +149,13 @@ function validEmail(value: unknown, id: string, senders: AppState['senders']): v
 }
 
 export function normalizeState(input: unknown): NormalizationResult {
-  const restore = (reason: 'schema-version' | 'invalid-state'): NormalizationResult => ({
-    state: buildSeedState(), restoredSeed: true,
-    diagnostics: [{ code: 'seed-restored', reason, message: 'Restored sample mailbox' }],
-  })
+  const restore = (reason: 'schema-version' | 'invalid-state'): NormalizationResult => {
+    const result = buildSeed()
+    return {
+      state: result.state, restoredSeed: true,
+      diagnostics: [{ code: 'seed-restored', reason, message: 'Restored sample mailbox' }, ...result.diagnostics],
+    }
+  }
   if (!isRecord(input)) return restore('invalid-state')
   if (input.schemaVersion !== SCHEMA_VERSION) return restore('schema-version')
   if (!isRecord(input.senders) || !isRecord(input.emails) || !Array.isArray(input.order)) {
