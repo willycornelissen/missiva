@@ -2,6 +2,7 @@ import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import type { MailRepository } from '../data/repository'
 import { selectFeed, selectImbox, selectPile, selectScreener } from '../domain/triage'
 import { AppStoreProvider, useAppState } from '../state/AppStore'
+import { PileDock } from '../features/common'
 import styles from './AppShell.module.css'
 
 export function AppShell({ repository }: { repository?: MailRepository }) {
@@ -43,7 +44,7 @@ function Layout() {
           <Route path="*" element={<Navigate to="/imbox" replace />} />
         </Routes>
       </main>
-      <div id="pile-dock" />
+      <PileDock />
     </div>
   </div>
 }

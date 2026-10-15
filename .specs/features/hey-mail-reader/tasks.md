@@ -729,15 +729,38 @@ their assigned tasks; no completed UI story claimed yet.
 
 **Done when**:
 
-- [ ] `EmailRow` shows sender, subject, snippet, time, seen/unseen state
-- [ ] `EmptyState` renders message + placeholder; `PileDock` shows pile counts
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests cover each component's rendering; test count recorded (no silent deletions)
+- [x] `EmailRow` shows sender, subject, snippet, time, seen/unseen state
+- [x] `EmptyState` renders message + placeholder; `PileDock` shows pile counts
+- [x] Gate check passes: `npm test`
+- [x] Component tests cover each component's rendering; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(ui): add shared email row, empty state, and pile dock`
+
+**Execution evidence (T14)**: RED missing components; quick gate 130 passed,
+8 files, zero skipped/failed. Shared reader/body/actions added here so every view
+uses one sanitizer seam. Shell dock wired now; no dead pile links at final delivery.
+
+| Criterion (A) | Exact assertion (`src/features/common/common.test.tsx`) | Outcome | Covered |
+| --- | --- | --- | --- |
+| Row fields | `:23-26` `expect(within(row).getByText('Maya Chen')).toBeVisible()`; subject/preview equivalents; `expect(row.querySelector('time')).toHaveAttribute('dateTime', email.receivedAt)` | Sender, subject, preview and original timestamp | Yes |
+| IMBOX-03 | `:27` `expect(within(row).getByLabelText('Unseen')).toBeVisible()`; `:34-35` `expect(screen.queryByLabelText('Unseen')).not.toBeInTheDocument()`; `expect(screen.getByLabelText('Seen')).toBeInTheDocument()` | Explicit distinct seen state | Yes |
+| Pile counts/actions, conflict | `:37` `expect(screen.getByRole('link', { name: 'Reply Later, 1 email' })).toHaveAttribute('href', '/reply-later')`; `:39-40` `expect(screen.getByRole('link', { name: 'Reply Later, 0 emails' })).toBeVisible()`; `expect(screen.getByRole('link', { name: 'Set Aside, 1 email' })).toHaveAttribute('href', '/set-aside')` | Count changes, latest pile only, navigable tiles | Yes |
+| Empty state | `:45-47` `expect(screen.getByRole('heading', { name: 'Nothing new' })).toBeVisible()`; `expect(screen.getByText('Enjoy a little breathing room.')).toBeVisible()`; `expect(screen.getByTestId('empty-illustration')).toHaveAttribute('aria-hidden', 'true')` | Message + decorative illustration | Yes |
+| Empty piles | `:52-53` `expect(screen.getByRole('link', { name: 'Reply Later, 0 emails' })).toBeVisible()` and Set Aside equivalent | Both zero counts | Yes |
+| Safe reader | `:60-62` `expect(body.innerHTML).toBe('<p>Safe <strong>story</strong></p>')`; `expect(screen.getByText('maya@example.com')).toBeVisible()`; `expect(screen.getByRole('heading', { name: 'Subject unsafe' })).toBeVisible()` | Safe HTML, metadata, no executable content | Yes |
+
+| Assertions (C, same file) | Maps to | Keep |
+| --- | --- | --- |
+| `:23-27,34-35` row field/time/indicator assertions above | T14 rendering, IMBOX-03 | Yes |
+| `:37,39-40,52-53` exact pile links/counts above | REPLY-01/02, ASIDE-01/02, conflict edge | Yes |
+| `:45-47` title/message/illustration above | Empty-state assumption | Yes |
+| `:60-62` sanitized HTML/metadata above | Body rendering assumption, unsafe HTML edge | Yes |
+
+Adequacy A-D passed: actual count/state effects, no mock-only assertions,
+all tests necessary, AD-004/co-location followed. No previous tests changed.
 
 ---
 

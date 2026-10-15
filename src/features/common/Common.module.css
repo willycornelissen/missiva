@@ -1,0 +1,77 @@
+.viewHeader { margin-bottom: 32px; }
+.eyebrow { color: var(--muted); font-size: 10px; letter-spacing: 1.8px; font-weight: 650; margin-bottom: 12px; }
+.titleLine { display: flex; align-items: center; gap: 14px; }
+.titleCount { background: #e9e7df; font-size: 13px; padding: 4px 9px; border-radius: 8px; margin-bottom: 10px; }
+.description { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.7; }
+.row { display: flex; align-items: center; background: #fff; border-bottom: 1px solid #eeede8; min-width: 0; }
+.row:last-child { border-bottom: 0; }
+.row:hover, .row[data-selected="true"] { background: #fbfaf6; }
+.row[data-selected="true"] { box-shadow: inset 3px 0 var(--purple); }
+.openRow { border: 0; background: transparent; padding: 19px 22px; display: flex; align-items: center; gap: 15px; text-align: left; color: var(--ink); width: 100%; min-width: 0; }
+.avatar { width: 39px; height: 39px; border-radius: 50%; flex: none; display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; color: #66755b; background: #e9eedf; }
+.avatar[data-tone="1"] { background: #f4e9dc; color: #997954; }
+.avatar[data-tone="2"] { background: #e8e3f0; color: #86749d; }
+.avatar[data-tone="3"] { background: #dfecef; color: #5f8086; }
+.rowContent { min-width: 0; flex: 1; display: grid; grid-template-columns: minmax(100px, 29%) 1fr; column-gap: 16px; row-gap: 5px; }
+.sender { grid-row: span 2; font-size: 13px; font-weight: 650; align-self: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.subject { font-size: 13px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.snippet { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rowMeta { display: grid; justify-items: end; gap: 10px; margin-left: 8px; flex: none; }
+.rowMeta time { font-size: 10px; color: var(--muted); }
+.unseenDot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); }
+.seenDot { width: 6px; height: 6px; border-radius: 50%; border: 1px solid #b6b8ad; }
+.seen { background: #fdfcf9; }
+.seen .sender, .seen .subject { font-weight: 400; color: #64665f; }
+.rowActions { display: flex; gap: 3px; padding-right: 12px; }
+.action { border: 1px solid var(--line); border-radius: 7px; padding: 7px 11px; background: white; color: var(--muted); font-size: 12px; }
+.action:hover { color: var(--purple); background: var(--purple-soft); border-color: #cbc1dd; }
+.rowActions .action { font-size: 18px; padding: 3px 7px; border-color: transparent; background: transparent; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.reader { background: white; border: 1px solid var(--line); border-radius: 14px; padding: 30px; margin-bottom: 25px; box-shadow: 0 3px 15px #29282204; }
+.readerToolbar { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 25px; }
+.back { background: none; border: 0; color: var(--purple); padding: 6px 0; font-size: 12px; }
+.readerTitle { font-family: Georgia, serif; font-size: 30px; font-weight: 400; line-height: 1.25; }
+.senderDetail { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+.senderDetail strong { font-size: 13px; }
+.senderDetail span:not(.avatar) { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
+.senderDetail time { font-size: 11px; color: var(--muted); margin-left: auto; }
+.body { font-size: 15px; line-height: 1.85; overflow-wrap: anywhere; white-space: pre-wrap; overflow-x: auto; }
+.body p { margin-bottom: 1em; }
+.body h2, .body h3 { line-height: 1.4; }
+.body img { max-width: 100%; height: auto; border-radius: 8px; }
+.body blockquote { border-left: 3px solid var(--line); margin-left: 0; padding-left: 20px; color: var(--muted); }
+.empty { text-align: center; padding: 40px 20px; }
+.emptyArt { position: relative; display: inline-block; color: #9b998c; font-size: 42px; transform: rotate(-9deg); margin-bottom: 14px; }
+.emptyArt span { position: absolute; top: -8px; right: -15px; font-size: 20px; color: var(--orange); }
+.empty h3 { font-family: Georgia, serif; font-weight: 400; font-size: 23px; margin-bottom: 8px; }
+.empty p { color: var(--muted); font-size: 12px; margin: 0; line-height: 1.7; }
+.dock { position: fixed; right: 38px; bottom: 0; display: flex; gap: 16px; padding-top: 18px; z-index: 4; }
+.pile { position: relative; display: flex; align-items: center; gap: 13px; min-width: 216px; padding: 23px 20px 28px; border: 1px solid #dbd5e5; border-bottom: 0; border-radius: 13px 13px 0 0; color: #665484; background: #eee9f5; text-decoration: none; box-shadow: 0 -3px 18px #3430350a; }
+.pile::before { content: ''; position: absolute; z-index: -1; inset: -6px 7px 0; border-radius: 12px 12px 0 0; border: 1px solid #dbd5e5; background: #f5f1f9; transform: rotate(-2deg); }
+.pile:hover { background: #e5ddf0; }
+.pileIcon { font-size: 29px; }
+.pile strong { font-size: 13px; }
+.pile small { display: block; font-size: 10px; opacity: .8; margin-top: 5px; }
+.pileCount { margin-left: auto; border: 1px solid #c9bfd8; border-radius: 50%; padding: 4px; width: 26px; height: 26px; text-align: center; font-size: 12px; }
+.asidePile { color: #69775a; background: #ebefdf; border-color: #d9dfcb; }
+.asidePile::before { background: #f2f4e9; border-color: #d9dfcb; transform: rotate(2deg); }
+.asidePile:hover { background: #e2e8d4; }
+.asidePile .pileCount { border-color: #c3ccb4; }
+@media (max-width: 1150px) {
+  .rowContent { grid-template-columns: 1fr; gap: 4px; }
+  .sender { grid-row: auto; font-size: 11px; }
+  .openRow { padding: 16px; }
+}
+@media (max-width: 700px) {
+  .dock { right: 12px; left: 12px; gap: 12px; }
+  .pile { min-width: 0; flex: 1; padding: 17px 12px 20px; gap: 10px; }
+  .pile strong { font-size: 12px; }
+  .pileIcon { font-size: 24px; }
+  .rowActions { flex-direction: column; padding-right: 8px; }
+  .openRow { gap: 10px; padding: 14px 10px; }
+  .rowMeta { margin-left: 0; }
+  .row .avatar { width: 30px; height: 30px; font-size: 10px; }
+  .reader { padding: 20px 16px; }
+  .senderDetail { flex-wrap: wrap; }
+  .senderDetail time { width: 100%; margin: 0; }
+}

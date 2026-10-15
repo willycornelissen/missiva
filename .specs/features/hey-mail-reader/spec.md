@@ -308,6 +308,9 @@ integration remains T14/T19; final independent verification remains after T20.
 T13 mounts the persistent store and five client routes in a responsive shell;
 navigation and empty stored counts verified (125 tests). UI stories remain
 Implementing until their views and independent verification are complete.
+T14 adds visible unseen indicators, counted bottom-docked pile navigation,
+shared empty states, and the sanitized reader seam (130 tests). Row triage
+controls exercise real store updates, including single-pile conflict behavior.
 
 ---
 
