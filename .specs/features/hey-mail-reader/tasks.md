@@ -398,16 +398,39 @@ Counts/docked UI remain T14/T17.
 
 **Done when**:
 
-- [ ] Set-aside adds to pile with count and leaves New-for-you (ASIDE-01, ASIDE-02, ASIDE-04)
-- [ ] Remove restores to originating box (ASIDE-03)
-- [ ] Conflicting pile assignment keeps only the most recent pile (spec edge case)
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests map 1:1 to ASIDE-01..04 + conflict edge; test count recorded (no silent deletions)
+- [x] Set-aside adds to pile with count and leaves New-for-you (ASIDE-01, ASIDE-02, ASIDE-04)
+- [x] Remove restores to originating box (ASIDE-03)
+- [x] Conflicting pile assignment keeps only the most recent pile (spec edge case)
+- [x] Gate check passes: `npm test`
+- [x] Unit tests map 1:1 to ASIDE-01..04 + conflict edge; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(triage): add set-aside pile and pile conflict rule`
+
+**Execution evidence (T8)**: `npm test`: 37 passed (+11), 0 skipped/failed.
+Origin and seen state survive both pile assignments and removal; moving/removing
+the last reply also exits active Focus. Docked rendering remains T14/T18.
+
+| Criterion (A) | Assertion evidence (`src/domain/triage.test.ts`) | Outcome |
+| --- | --- | --- |
+| ASIDE-01/02/04 | `:255-258` pile equals `[email('reference', {pile:'setAside'})]`; length `1`; new group `[]`; source email unchanged | Counted exclusively, seen flag preserved |
+| ASIDE-03 | `:271-275` `expect(returned.emails.saved).toEqual(original)`; both piles `[]`; destination selector equals `[original]` | Both piles restore Imbox/Feed and original seen flag |
+| Conflict edge | `:284-288` chosen pile equals complete expected Feed email with chosen pile; other pile and Feed `[]`; returned Feed equals original email | Latest wins in both directions, origin retained |
+| REPLY-05 interaction | `:295-298` reply pile `[]`; focus `{active:false,cursor:0}`; focus email `null`; final pile exact | Removing/moving final reply exits |
+| Screening isolation | `:304-305` `expect(next).toEqual(state)`; Set Aside `[]` | Pending/rejected remain excluded |
+
+| Assertions (C) | Requirement | Keep |
+| --- | --- | --- |
+| `triage.test.ts:255-258`, complete pile above | ASIDE-01/02/04 | Yes |
+| `triage.test.ts:271-275`, destination above | ASIDE-03 and REMOVE_FROM_PILE action | Yes |
+| `triage.test.ts:284-288`, both pile states above | Conflict edge | Yes |
+| `triage.test.ts:295-298`, empty focus above | REPLY-05 | Yes |
+| `triage.test.ts:304-305`, excluded state above | SCRN-01/03 on new path | Yes |
+
+Adequacy A-D passed: all named fields/state transitions checked, both conflict
+directions tested, no shallow/unclaimed tests; AD-004/co-location followed.
 
 ---
 

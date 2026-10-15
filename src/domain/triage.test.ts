@@ -246,3 +246,62 @@ describe('Reply Later and Focus (REPLY-01..05)', () => {
     expect(selectFocusReply(reduce(next, { type: 'FOCUS_REPLY_START' }))).toBeNull()
   })
 })
+
+describe('Set Aside and pile conflicts (ASIDE-01..04)', () => {
+  it('counts Set Aside once and removes it from New for you without marking it seen', () => {
+    const state = mailbox([email('reference')])
+    const next = reduce(state, { type: 'SET_ASIDE', emailId: 'reference' })
+    const repeated = reduce(next, { type: 'SET_ASIDE', emailId: 'reference' })
+    expect(selectPile(repeated, 'setAside')).toEqual([email('reference', { pile: 'setAside' })])
+    expect(selectPile(repeated, 'setAside')).toHaveLength(1)
+    expect(selectImbox(repeated).newForYou).toEqual([])
+    expect(state.emails.reference).toEqual(email('reference'))
+  })
+
+  it.each([
+    { box: 'imbox', kind: 'personal', action: 'SET_ASIDE', seen: false },
+    { box: 'feed', kind: 'newsletter', action: 'SET_ASIDE', seen: true },
+    { box: 'imbox', kind: 'personal', action: 'REPLY_LATER', seen: true },
+    { box: 'feed', kind: 'newsletter', action: 'REPLY_LATER', seen: false },
+  ] as const)('restores $action mail to $box with its original seen flag', ({ box, kind, action, seen }) => {
+    const original = email('saved', { box, originBox: box, seen })
+    const state = mailbox([original], [sender({ kind })])
+    const piled = reduce(state, { type: action, emailId: 'saved' })
+    const returned = reduce(piled, { type: 'REMOVE_FROM_PILE', emailId: 'saved' })
+    expect(returned.emails.saved).toEqual(original)
+    expect(selectPile(returned, 'setAside')).toEqual([])
+    expect(selectPile(returned, 'replyLater')).toEqual([])
+    expect(box === 'feed' ? selectFeed(returned) : seen
+      ? selectImbox(returned).previouslySeen : selectImbox(returned).newForYou).toEqual([original])
+  })
+
+  it.each([
+    { first: 'SET_ASIDE', last: 'REPLY_LATER', chosen: 'replyLater', other: 'setAside' },
+    { first: 'REPLY_LATER', last: 'SET_ASIDE', chosen: 'setAside', other: 'replyLater' },
+  ] as const)('keeps only the latest pile when $last follows $first', ({ first, last, chosen, other }) => {
+    const state = mailbox([email('letter', { box: 'feed', originBox: 'feed' })], [sender({ kind: 'newsletter' })])
+    const next = reduce(reduce(state, { type: first, emailId: 'letter' }), { type: last, emailId: 'letter' })
+    expect(selectPile(next, chosen)).toEqual([email('letter', { box: 'feed', originBox: 'feed', pile: chosen })])
+    expect(selectPile(next, other)).toEqual([])
+    expect(selectFeed(next)).toEqual([])
+    const returned = reduce(next, { type: 'REMOVE_FROM_PILE', emailId: 'letter' })
+    expect(selectFeed(returned)).toEqual([state.emails.letter])
+  })
+
+  it.each(['SET_ASIDE', 'REMOVE_FROM_PILE'] as const)('exits Focus when $type empties Reply Later', (type) => {
+    const state = mailbox([email('reply', { pile: 'replyLater' })])
+    const focused = reduce(state, { type: 'FOCUS_REPLY_START' })
+    const next = reduce(focused, { type, emailId: 'reply' })
+    expect(selectPile(next, 'replyLater')).toEqual([])
+    expect(next.focusReply).toEqual({ active: false, cursor: 0 })
+    expect(selectFocusReply(next)).toBeNull()
+    expect(next.emails.reply.pile).toBe(type === 'SET_ASIDE' ? 'setAside' : null)
+  })
+
+  it.each(['pending', 'rejected'] as const)('keeps %s mail outside Set Aside', (decision) => {
+    const state = mailbox([email('blocked')], [sender({ decision })])
+    const next = reduce(state, { type: 'SET_ASIDE', emailId: 'blocked' })
+    expect(next).toEqual(state)
+    expect(selectPile(next, 'setAside')).toEqual([])
+  })
+})

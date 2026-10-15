@@ -256,10 +256,10 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | REPLY-03 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Implementing |
 | REPLY-04 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Implementing |
 | REPLY-05 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Implementing |
-| ASIDE-01 | P1: Set Aside | Design | Pending |
-| ASIDE-02 | P1: Set Aside | Design | Pending |
-| ASIDE-03 | P1: Set Aside | Design | Pending |
-| ASIDE-04 | P1: Set Aside | Design | Pending |
+| ASIDE-01 | P1: Set Aside | T8 core / T14-T18 UI | Implementing |
+| ASIDE-02 | P1: Set Aside | T8 count / T14-T18 UI | Implementing |
+| ASIDE-03 | P1: Set Aside | T8 core / T18 UI | Implementing |
+| ASIDE-04 | P1: Set Aside | T8 isolation / T15 UI | Implementing |
 | FEED-01 | P1: The Feed | T5-T6 core / T19 UI | Implementing |
 | FEED-02 | P1: The Feed | T6 selector / T19 UI | Implementing |
 | FEED-03 | P1: The Feed | T6 isolation / T19 UI | Implementing |
@@ -276,7 +276,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; 18 mapped with core evidence, 12 awaiting implementation.
+**Coverage:** 30 total; 22 mapped with core evidence, 8 awaiting implementation.
 Task-local assertion evidence is recorded under each completed task in `tasks.md`;
 Implementing means core covered, not full UI acceptance or independent verification.
 
@@ -287,6 +287,7 @@ dual-classification edge. P2 Paper Trail remains deferred.
 T3 supplies the bundled 40-email JSON and fresh `buildSeedState()` factory;
 seed completeness and demo coverage verified by 2 tests.
 T6 verifies the dual-classification edge: personal wins regardless of kind order.
+T8 verifies both directions of the most-recent-pile conflict edge and restoration.
 
 ---
 

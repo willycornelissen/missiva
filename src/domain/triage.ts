@@ -76,6 +76,13 @@ function putInPile(state: AppState, emailId: string, pile: PileKind): AppState {
 
 export function reduce(state: AppState, action: TriageAction): AppState {
   switch (action.type) {
+    case 'SET_ASIDE':
+      return putInPile(state, action.emailId, 'setAside')
+    case 'REMOVE_FROM_PILE': {
+      const email = state.emails[action.emailId]
+      if (!email || email.pile === null) return state
+      return replaceEmail(state, { ...email, pile: null, box: email.originBox })
+    }
     case 'REPLY_LATER':
       return putInPile(state, action.emailId, 'replyLater')
     case 'FOCUS_REPLY_START':
