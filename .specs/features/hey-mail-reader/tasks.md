@@ -190,15 +190,38 @@ necessary, AD-004/co-location followed. No tests changed, skipped, or deleted.
 
 **Done when**:
 
-- [ ] `selectImbox` returns two ordered groups (IMBOX-01)
-- [ ] `OPEN_EMAIL` moves an email to Previously-seen and marks it seen (IMBOX-02, IMBOX-03)
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests map 1:1 to IMBOX-01/02/03; test count recorded (no silent deletions)
+- [x] `selectImbox` returns two ordered groups (IMBOX-01)
+- [x] `OPEN_EMAIL` moves an email to Previously-seen and marks it seen (IMBOX-02, IMBOX-03)
+- [x] Gate check passes: `npm test`
+- [x] Unit tests map 1:1 to IMBOX-01/02/03; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(triage): add reducer core, open-email seen transition, imbox selectors`
+
+**Execution evidence (T4)**: `npm test`: 6 passed (4 domain + 2 seed), 0
+skipped/failed. Removed scaffold-only `--passWithNoTests` from `package.json`
+now that meaningful tests exist. UI rendering remains T14/T15.
+
+| Criterion (A) | Assertion evidence (`src/domain/triage.test.ts`) | Outcome |
+| --- | --- | --- |
+| IMBOX-01 groups/order | `:37-38` `expect(ids(selectImbox(state).newForYou)).toEqual(['new', 'old'])`; seen IDs equal `['read-new', 'read-old']` | Separate, newest-first groups |
+| IMBOX-02 transition | `:45-48` `expect(next.emails.new).toEqual({ ...state.emails.new, seen: true })`; new equals `[]`, seen IDs equal `['new']`, `expect(state).toEqual(before)` | Only new state becomes seen |
+| IMBOX-03 state for indicator | `:53-54` `expect(groups.newForYou.map((e) => e.seen)).toEqual([false])`; seen flags equal `[true]` | Explicit distinct flags |
+| IMBOX-04 selector empty path | `:58-61` `expect(selectImbox(mailbox([]))).toEqual({ newForYou: [], previouslySeen: [] })` | Empty lists for view to render |
+
+| Assertions (C) | Requirement | Keep |
+| --- | --- | --- |
+| `triage.test.ts:37-38`, exact IDs above | IMBOX-01; pile isolation | Yes |
+| `triage.test.ts:45-48`, exact state above | IMBOX-02; immutable core | Yes |
+| `triage.test.ts:53-54`, flags above | IMBOX-03 | Yes |
+| `triage.test.ts:58-61`, groups above | IMBOX-04 selector path | Yes |
+
+Adequacy A-D: all core criteria covered; state/payload values checked, no shallow
+tests, every test spec-linked; AD-004/co-location followed. Precision clarification:
+Imbox's "ordered groups" does not specify within-group ordering; newest-first
+matches the design's global receive order and Feed convention.
 
 ---
 

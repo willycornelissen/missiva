@@ -241,10 +241,10 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| IMBOX-01 | P1: The Imbox | Design | Pending |
-| IMBOX-02 | P1: The Imbox | Design | Pending |
-| IMBOX-03 | P1: The Imbox | Design | Pending |
-| IMBOX-04 | P1: The Imbox | Design | Pending |
+| IMBOX-01 | P1: The Imbox | T4 core / T15 UI | Implementing |
+| IMBOX-02 | P1: The Imbox | T4 core / T15 UI | Implementing |
+| IMBOX-03 | P1: The Imbox | T4 core / T14-T15 UI | Implementing |
+| IMBOX-04 | P1: The Imbox | T4 selector / T15 UI | Implementing |
 | IMBOX-05 | P1: The Imbox | Design | Pending |
 | SCRN-01 | P1: The Screener | Design | Pending |
 | SCRN-02 | P1: The Screener | Design | Pending |
@@ -276,7 +276,9 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total, 0 mapped to tasks, 30 unmapped ⚠️ (mapping happens in Tasks).
+**Coverage:** 30 total; 4 mapped with core evidence, 26 awaiting implementation.
+Task-local assertion evidence is recorded under each completed task in `tasks.md`;
+Implementing means core covered, not full UI acceptance or independent verification.
 
 **Execution progress:** T1 foundation verified with build/lint/test (0 tests).
 No user-facing acceptance criterion is complete yet.
