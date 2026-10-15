@@ -925,14 +925,39 @@ changed or new deviations. Shared styling includes return-bar support for T18.
 
 **Done when**:
 
-- [ ] Pile shows count; items can be returned to their box (ASIDE-01..03)
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests cover add/return + count; test count recorded (no silent deletions)
+- [x] Pile shows count; items can be returned to their box (ASIDE-01..03)
+- [x] Gate check passes: `npm test`
+- [x] Component tests cover add/return + count; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(set-aside): add set-aside pile ui`
+
+**Execution evidence (T18)**: Four RED cases, then quick gate 144 passed,
+12 files, zero skipped/failed. Return control works from pile list and shared
+reader (including Reply Later); no storage access or triage logic in views.
+
+| Criterion (A) | Exact assertion (`src/features/set-aside/SetAside.test.tsx`) | Outcome | Covered |
+| --- | --- | --- | --- |
+| ASIDE-01/02/04 | `:11-14` `expect(screen.queryByRole('article', { name: 'Subject reference' })).not.toBeInTheDocument()`; caught-up heading visible; after 1-count tile click, `expect(screen.getByRole('article', { name: 'Subject reference' })).toBeVisible()` | Removed from New, counted dock opens reference | Yes |
+| ASIDE-03 Imbox | `:16-20` empty heading and zero dock visible; after Imbox link, `expect(within(screen.getByRole('region', { name: 'New for you' })).getByText('Subject reference')).toBeVisible()`; `expect(app.storedState().emails.reference).toEqual(message('reference'))` | Original Imbox and unseen state restored | Yes |
+| ASIDE-03 Feed, opened return | `:28-33` `expect(screen.getByTestId('email-body')).toHaveTextContent('Message newsletter')`; empty pile, Feed 1 and Imbox 0 links visible; `expect(app.storedState().emails.newsletter).toEqual({ ...original, pile: null, seen: true })` | Reading marks seen, return preserves origin and all fields | Yes |
+| Latest pile wins | `:40-43` zero Set Aside link visible; `expect(screen.getByRole('article', { name: 'Subject reference' })).toBeVisible()` in Reply Later; `expect(app.storedState().emails.reference.pile).toBe('replyLater')` | Single-pile assignment | Yes |
+| Empty route | `:48-50` empty heading visible; `expect(screen.getByText('Tickets, plans, and things worth keeping close. Set them aside here.')).toBeVisible()`; `expect(screen.queryByRole('button', { name: /Return to/ })).not.toBeInTheDocument()` | Dedicated empty state, no stale return controls | Yes |
+
+| Assertions (C, same file) | Maps to | Keep |
+| --- | --- | --- |
+| `:11-14` absent/new and visible pile row above | ASIDE-01/02/04 | Yes |
+| `:16-20` zero count, restored row and full payload above | ASIDE-03, seen preservation | Yes |
+| `:28-33` body/destination counts/full payload above | ASIDE-03, safe reading | Yes |
+| `:40-43` zero old pile/new pile and assignment above | Conflicting-pile edge | Yes |
+| `:48-50` empty message/no controls above | Empty-state assumption | Yes |
+
+Adequacy A-D passed: complete restored email assertions for both origins,
+real cross-route user flow, every test necessary; AD-004 followed. No prior
+tests changed. Feed content rendering is T19; its destination count/state is
+already asserted here.
 
 ---
 

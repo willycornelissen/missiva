@@ -320,6 +320,9 @@ Screener (137 tests). Future-mail behavior remains covered by the pure core.
 T17 integrates REPLY-01..05 end to end: dock counts, expanded pile, safe
 reading, newest-first single-message Focus, complete progression/empty exit,
 and explicit exit preserving the pile (140 tests). No send operation exists.
+T18 integrates ASIDE-01..04 and the conflict edge: counted expansion,
+safe reading, original Imbox/Feed restoration with seen state preserved,
+and empty Set Aside (144 tests).
 
 ---
 

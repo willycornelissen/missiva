@@ -36,7 +36,15 @@ export function MailActions({ email, compact = false, onDone }: { email: Email; 
       onClick={() => { dispatch({ type: 'REPLY_LATER', emailId: email.id }); onDone?.() }}><span aria-hidden="true">↩</span>{!compact && ' Reply Later'}</button>
     <button className={styles.action} aria-label={`Set aside: ${email.subject}`} title="Set aside (e)"
       onClick={() => { dispatch({ type: 'SET_ASIDE', emailId: email.id }); onDone?.() }}><span aria-hidden="true">▱</span>{!compact && ' Set Aside'}</button>
+    {!compact && email.pile && <ReturnToBox email={email} onDone={onDone} />}
   </div>
+}
+
+export function ReturnToBox({ email, onDone }: { email: Email; onDone?: () => void }) {
+  const dispatch = useDispatch()
+  const destination = email.originBox === 'feed' ? 'Feed' : 'Imbox'
+  return <button className={styles.action} aria-label={`Return to ${destination}: ${email.subject}`}
+    onClick={() => { dispatch({ type: 'REMOVE_FROM_PILE', emailId: email.id }); onDone?.() }}>↗ Return to {destination}</button>
 }
 
 export function EmailBody({ email }: { email: Email }) {
