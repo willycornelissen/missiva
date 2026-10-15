@@ -511,16 +511,51 @@ No feature completion claim or Verifier run: T10-T20 remain.
 
 **Done when**:
 
-- [ ] `load` returns persisted state or seed on miss/invalid/version-mismatch (IMBOX-05)
-- [ ] `save` persists; `reset` restores seed
-- [ ] `localStorage` throw is caught → in-memory fallback (spec edge case)
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests cover load/save/reset + failure path; test count recorded (no silent deletions)
+- [x] `load` returns persisted state or seed on miss/invalid/version-mismatch (IMBOX-05)
+- [x] `save` persists; `reset` restores seed
+- [x] `localStorage` throw is caught → in-memory fallback (spec edge case)
+- [x] Gate check passes: `npm test`
+- [x] Unit tests cover load/save/reset + failure path; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(data): add localStorage repository with schema guard and fallback`
+
+**Execution evidence (T10)**: Tests written first; targeted RED confirmed missing
+repository module. `npm test`: 109 passed, 4 files, 0 failed/skipped (+12).
+Editor test discovery returned no tests; used the configured Vitest CLI.
+The adapter preserves core diagnostics and synchronously publishes failed-save
+notices; UI banners remain T20. No existing test changed.
+
+| Criterion (A) | Assertion evidence (`src/data/repository.test.ts`) | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Missing key | `:17-20` `expect(state).toEqual(buildSeedState())`; `expect(repo.getNotices()).toEqual([])`; `expect(repo.load()).toEqual(buildSeedState())` | Fresh seed, no corruption notice or alias | Yes |
+| Save/load, SCRN-04 | `:28-31` `expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(state)`; `expect(createRepository().load()).toEqual(state)`; `expect(createRepository().load().senders.noah.decision).toBe('approved')`; `expect(localStorage.length).toBe(1)` | Complete triage durably retained under one key | Yes |
+| Valid empty mailbox | `:38-39` `expect(repo.load()).toEqual(empty)`; `expect(repo.getNotices()).toEqual([])` | Empty is not corruption | Yes |
+| Invalid JSON/envelope/version, IMBOX-05 | `:51-55` `expect(repo.load()).toEqual(buildSeedState())`; `expect(repo.getNotices()).toEqual(notices)`; `expect(observed).toEqual([notices])`; `expect(console.warn).toHaveBeenCalledWith('Restored sample mailbox', notices[0])` | Seed, exact reason/code/message, observable warning | Yes |
+| Malformed mail edge, diagnostic passthrough | `:65-73` `expect(loaded.emails['mail-01']).toBeUndefined()`; `expect(Object.keys(loaded.emails)).toHaveLength(39)`; `expect(loaded.emails['mail-02']).toEqual(state.emails['mail-02'])`; `expect(repo.getNotices()).toEqual(notices)`; `expect(vi.mocked(console.warn).mock.calls).toEqual(notices.map((notice) => [notice.message, notice]))` | Bad mail skipped, healthy preserved, full diagnostic payloads logged/exposed | Yes |
+| Reset | `:81-86` `expect(reset).toEqual(buildSeedState())`; `expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(buildSeedState())`; `expect(createRepository().load()).toEqual(buildSeedState())`; `expect(localStorage.getItem('unrelated')).toBe('keep')`; `expect(repo.load()).toEqual(buildSeedState())` | Fresh independent seed in memory/storage, scoped key | Yes |
+| Access/read failures | `:97-108` `expect(repo.load()).toEqual(buildSeedState())`; `expect(repo.getNotices()).toEqual([notice])`; `expect(console.warn).toHaveBeenCalledWith(notice.message, notice)`; `expect(repo.load()).toEqual(next)`; `expect(repo.reset()).toEqual(buildSeedState())` | Seed start, sticky no-persist warning, triage/reset work | Yes |
+| Failed save | `:117,125-131` `expect(repo.getNotices()).toEqual([])` then `expect(repo.getNotices()).toEqual(notices)`; `expect(observed).toEqual([notices])`; `expect(repo.load()).toEqual(next)`; `expect(repo.load().emails['mail-31'].seen).toBe(true)`; `expect(stored.emails['mail-31'].seen).toBe(false)` | Newly observable failure; latest triage retained independently, stored data unchanged | Yes |
+| Failed reset write | `:140-145` `expect(repo.load()).toEqual(changed)`; `expect(repo.reset()).toEqual(buildSeedState())`; `expect(repo.load()).toEqual(buildSeedState())`; `expect(repo.getNotices()).toEqual([{code:'storage-unavailable',operation:'reset',message:"Changes won't be saved this session"}])` | Seed in memory and exact no-persist notice | Yes |
+
+| Assertions (C, same file) | Maps to | Keep |
+| --- | --- | --- |
+| `:17-20` state/notice equality above | T10 load miss / fresh seed contract | Yes |
+| `:28-31` persisted and reloaded payload above | T10 save/load, SCRN-04, AD-003 key scope | Yes |
+| `:38-39` empty state/notice equality above | Valid empty mailbox assumption | Yes |
+| `:51-55` seed/notice/observed/log assertions above | IMBOX-05, invalid-state load guard | Yes |
+| `:65-73` skipped/healthy records and exact diagnostics above | Malformed email edge / T9 adapter contract | Yes |
+| `:81-86` reset and storage equality above | T10 reset / AD-003 scoped persistence | Yes |
+| `:97-108` seed/next/reset/notice assertions above | Storage unavailable edge | Yes |
+| `:117,125-131` failed-save state/notice assertions above | Storage-full edge, no silent failed save | Yes |
+| `:140-145` reset state/notice assertions above | T10 reset and storage-full edge | Yes |
+
+Adequacy A-D passed: exact payload values, not invocation-only checks; every
+test requirement-linked; AD-004/co-location followed. Notice shape and sticky
+fallback semantics were unspecified implementation details, now documented in
+design/README. Exact banner strings follow the design. No spec deviation.
 
 ---
 

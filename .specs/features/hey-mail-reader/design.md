@@ -111,8 +111,19 @@ No existing code to reuse — the project is empty. This design sets the convent
   - `load(): AppState` — returns persisted state or the seed on miss/invalid/version mismatch
   - `save(state: AppState): void`
   - `reset(): AppState` — restore the seed
-- **Dependencies**: Seed Data, Domain Models.
+  - `getNotices(): readonly RepositoryNotice[]` and `subscribe(listener)` — observable session diagnostics, including failed writes
+  - `createRepository(getStorage?)` — isolated session; exported `repository` is the browser singleton
+- **Dependencies**: Seed Data, Domain Models, core normalization.
 - **Reuses**: none.
+- **Execution clarification (T10)**: The repository retains all core diagnostics,
+  logs each as `console.warn(message, notice)`, and publishes immutable-by-contract
+  notice snapshots. JSON failures add `seed-restored` / `invalid-json`; storage
+  failures add `storage-unavailable` with `operation: load | save | reset`.
+  Load is cached per session; storage key is `missiva.mailbox.v1`. A storage
+  failure disables persistence for that instance. Initial load failure uses seed;
+  later failed saves preserve the latest triage in memory, not a destructive
+  mid-session reset. Reset persists a fresh seed without clearing unrelated keys.
+  Missing keys are silent; diagnostics remain observable through save and reset.
 
 ### AppStore (`src/state/AppStore.tsx`)
 

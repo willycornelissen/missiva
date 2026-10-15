@@ -245,11 +245,11 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | IMBOX-02 | P1: The Imbox | T4 core / T15 UI | Implementing |
 | IMBOX-03 | P1: The Imbox | T4 core / T14-T15 UI | Implementing |
 | IMBOX-04 | P1: The Imbox | T4 selector / T15 UI | Implementing |
-| IMBOX-05 | P1: The Imbox | T9 guard / T10-T11 adapter / T20 notice | Implementing |
+| IMBOX-05 | P1: The Imbox | T9-T10 guard/repository complete / T11 store / T20 notice | Implementing |
 | SCRN-01 | P1: The Screener | T5 core / T16 UI | Implementing |
 | SCRN-02 | P1: The Screener | T5 core / T16 UI | Implementing |
 | SCRN-03 | P1: The Screener | T5 core / T16 UI | Implementing |
-| SCRN-04 | P1: The Screener | T5 state / T10 persistence | Implementing |
+| SCRN-04 | P1: The Screener | T5 state + T10 persistence complete / T11 wiring | Implementing |
 | SCRN-05 | P1: The Screener | T5 selector / T16 UI | Implementing |
 | REPLY-01 | P1: Reply Later + Focus & Reply | T7 core / T14-T17 UI | Implementing |
 | REPLY-02 | P1: Reply Later + Focus & Reply | T7 count / T14-T17 UI | Implementing |
@@ -293,6 +293,10 @@ T8 verifies both directions of the most-recent-pile conflict edge and restoratio
 T9 verifies unknown-version fallback, explicit notices, skipped malformed
 records, invariant repairs, and fresh reset (97 total tests). Malformed-record
 warnings are pure diagnostics; adapter logging and visible notices remain T10-T20.
+T10 adds durable round-trip/reset, cached in-memory fallback, and observable
+logged diagnostics (109 total tests). Unknown version and invalid JSON restore
+seed with an explicit notice; failed saves retain triage and signal no-persist.
+Visible banners remain T20, not claimed complete by adapter tests.
 
 ---
 

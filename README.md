@@ -46,5 +46,29 @@ removes the current reply from the remaining queue and marks it seen; its cursor
 therefore stays at zero. `selectFocusReply` returns an email or `null`. Removing
 or moving the final reply exits Focus. Explicit exit leaves the pile intact.
 
-Persistence, sanitization, and mail-reader views are implemented in later tasks;
+## Storage repository
+
+`src/data/repository.ts` exports `repository` (the browser-session singleton),
+`createRepository(getStorage?)`, `MailRepository`, `RepositoryNotice`, and
+`STORAGE_KEY` (`missiva.mailbox.v1`). The factory optionally accepts a storage
+accessor returning `getItem`/`setItem`, so even access-denied getters are caught.
+
+- `load(): AppState` reads and normalizes once per repository instance, then
+  returns independent copies of its session state.
+- `save(state): void` retains a copy in memory and writes the complete JSON state.
+- `reset(): AppState` writes and returns a fresh seed; unrelated keys are untouched.
+- `getNotices(): readonly RepositoryNotice[]` is a stable snapshot until new
+  notices arrive. `subscribe(listener)` observes changes and returns unsubscribe.
+  Read the snapshot after subscribing so load-time notices are not missed.
+
+All normalization diagnostics are logged with `console.warn(message, notice)`
+and retained for the UI. Invalid JSON adds `seed-restored` with
+`reason: 'invalid-json'`. Storage failures add `storage-unavailable` with
+`operation: 'load' | 'save' | 'reset'` and the message
+`Changes won't be saved this session`. Fallback is sticky for that instance:
+loading starts from seed; a failed later write retains the latest triage rather
+than losing work. Reset still works in memory. Notices remain for the session,
+including after successful saves/reset; missing keys produce no notice.
+
+Sanitization and mail-reader views are implemented in later tasks;
 the current app is only the foundation shell.
