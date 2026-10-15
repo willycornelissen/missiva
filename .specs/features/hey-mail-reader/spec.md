@@ -104,11 +104,11 @@ work through them one by one, so that I can reply in a focused batch.
 
 1. WHEN the user marks an email "Reply Later" THEN the system SHALL add it to the Reply Later pile docked at the bottom of the screen.  <!-- event-driven -->
 2. The system SHALL display the Reply Later pile with a visible count of items in it.  <!-- ubiquitous -->
-3. WHEN the user enters Focus & Reply THEN the system SHALL present only Reply Later emails, one at a time, in order.  <!-- event-driven -->
+3. WHEN the user enters Focus & Reply THEN the system SHALL present only Reply Later emails, one at a time, newest-first by received time (most recent first).  <!-- event-driven -->
 4. WHEN the user finishes an email in Focus & Reply THEN the system SHALL advance to the next Reply Later email until none remain.  <!-- event-driven -->
 5. WHEN the Reply Later pile is empty THEN the system SHALL exit Focus & Reply and show an empty-pile state.  <!-- event-driven -->
 
-**Independent Test**: Mark two emails Reply Later, open Focus & Reply, and step through both until the pile empties.
+**Independent Test**: Mark two emails Reply Later, open Focus & Reply, and step through the newest received email first, then the older email, until the pile empties.
 
 ---
 
@@ -253,7 +253,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | SCRN-05 | P1: The Screener | T5 selector / T16 UI | Implementing |
 | REPLY-01 | P1: Reply Later + Focus & Reply | T7 core / T14-T17 UI | Implementing |
 | REPLY-02 | P1: Reply Later + Focus & Reply | T7 count / T14-T17 UI | Implementing |
-| REPLY-03 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Implementing |
+| REPLY-03 | P1: Reply Later + Focus & Reply | T7 core / T17 UI / T23 newest-first precision repair complete | Implementing |
 | REPLY-04 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Implementing |
 | REPLY-05 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Implementing |
 | ASIDE-01 | P1: Set Aside | T8 core / T14-T18 UI | Implementing |
@@ -344,6 +344,10 @@ reset expose skip diagnostics through repository logging/notices. Shared pure
 guards introduce no dependency cycle; core stays side-effect-free. Full build
 + lint + 192 tests passed, including all original 161 tests. Independent
 re-verification remains pending; no Verified status is claimed.
+T23 resolves F3 with the user's explicit newest-first-by-received-time choice.
+The AC now matches the approved design and existing tests; behavior is unchanged.
+Final build + lint + all 192 tests passed (17 files, none failed/skipped).
+T21-T23 are complete; the orchestrator owns fresh independent re-verification.
 
 ---
 

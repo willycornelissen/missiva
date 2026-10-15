@@ -1338,10 +1338,35 @@ Keep approved design, implementation, and original ordering assertions intact.
 
 **Done when**:
 
-- [ ] REPLY-03 explicitly says newest-first, consistent with approved design and user choice.
-- [ ] Existing core and real-shell tests assert newest reply first, older next, one message at a time; no behavior/test changes.
-- [ ] Final build/lint/all-tests gate passes with all 161 original tests retained; Handoff says repairs done, independent re-verification pending.
+- [x] REPLY-03 explicitly says newest-first, consistent with approved design and user choice.
+- [x] Existing core and real-shell tests assert newest reply first, older next, one message at a time; no behavior/test changes.
+- [x] Final build/lint/all-tests gate passes with all 161 original tests retained; Handoff says repairs done, independent re-verification pending.
 
 **Tests**: unit (existing spec-derived core and UI regression assertions)
 **Gate**: build; targeted `npm test -- src/domain/triage.test.ts src/features/reply-later/ReplyLater.test.tsx`, then `npm run build && npm run lint && npm test`
 **Commit**: `docs(spec): specify newest-first focus reply order`
+
+**Execution evidence (T23)**: User explicitly confirmed most recent first.
+REPLY-03 and its independent test now specify newest-first by received time,
+matching the already-approved design and implementation. No behavior or tests
+changed. Targeted core/Reply Later gate: 38 passed. Final build + lint + all
+tests: 192 passed, 17 files, zero failed/skipped. Compared to `0576807`, test
+changes are only the two added regression files; all 161 original tests remain
+unchanged. Handoff records repairs complete and independent re-verification
+pending, not a feature-level PASS.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Newest-first core queue/current item | `src/domain/triage.test.ts:203-205`: `expect(ids(selectPile(next, 'replyLater'))).toEqual(['new', 'old'])`; `expect(selectFocusReply(next)).toEqual(state.emails.new)`; `expect(next.focusReply).toEqual({active:true, cursor:0})` | REPLY-03 now explicitly names the existing newest-received-first oracle | Yes |
+| One reply only, newest visible first | `src/features/reply-later/ReplyLater.test.tsx:19-22`: `expect(screen.getAllByTestId('email-body')).toHaveLength(1)`; `expect(screen.getByTestId('email-body')).toHaveTextContent('Message newer')`; `expect(screen.queryByText('Subject older')).not.toBeInTheDocument()`; `expect(screen.queryByText('Subject unrelated')).not.toBeInTheDocument()` | Exactly the newest reply, no older or non-reply body | Yes |
+| Older reply next | `ReplyLater.test.tsx:25`: `expect(screen.getByTestId('email-body')).toHaveTextContent('Message older')`; `:27`: `expect(app.storedState().emails.newer).toEqual(message('newer', {receivedAt:'2026-10-11T09:00:00.000Z', seen:true}))` | REPLY-03/04 newest completed before older | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `triage.test.ts:203-205` exact order, active message and focus state above | REPLY-03, T23 confirmed ordering | Yes (unchanged) |
+| `ReplyLater.test.tsx:19-22` count, newest body, excluded others above | REPLY-03 | Yes (unchanged) |
+| `ReplyLater.test.tsx:25,27` older body and completed newer payload above | REPLY-03/04 | Yes (unchanged) |
+
+Adequacy A-D passed: the user resolves the precision gap; existing exact
+assertions now match the AC rather than design alone. No duplicate tests or
+unclaimed assertions added; AD-004 and original co-location retained.

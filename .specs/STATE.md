@@ -37,57 +37,48 @@
 ## Handoff
 
 - **Feature**: hey-mail-reader (`.specs/features/hey-mail-reader/`)
-- **Phase / Task**: Execute / batch 3 complete (T13-T20); T1-T20 implemented.
-  Independent feature verification pending.
-- **Completed**: Responsive five-route reader, sidebar, counted dock, safe
-  reader/previews/Feed, Imbox New/Seen, Screener, Reply Later/Focus, Set Aside
-  return, keyboard selection/actions, notices/reset, reduced motion, README.
-  T13 `edc019d`, T14 `10e98d7`, T15 `a478e41`, T16 `90eb41b`,
-  T17 `93254f0`, T18 `b7cbb79`, T19 `0dc5f83`; T20 in this atomic commit.
-  Exact per-task assertion/traceability evidence is in `tasks.md`.
+- **Phase / Task**: Approved repair round 1 of 3 complete (T21-T23, F1/F2/F3).
+  T1-T20 remain complete. Independent re-verification pending; no feature-level
+  PASS or Verified status claimed.
+- **Completed**: T21 `edda10e` resolves Imbox reader eligibility through the
+  current selector. Approve → open → reset restores persisted seed, removes
+  pending mail from the reader, and returns the sender to Screener; ordinary
+  open → seen remains open.
+  T22 `613b0c2` validates raw bundled messages before sender dereference,
+  skips invalid/missing fields and unknown senders, preserves source-index IDs,
+  and logs/publishes diagnostics on first load, fallback and reset.
+  T23 (this commit) carries the user's explicit most-recent-first choice into
+  REPLY-03 without changing behavior. Exact adequacy tables, gates, dependencies
+  and traceability are appended in `tasks.md` and recorded in `spec.md`.
 - **In-progress** (file:line): none
-- **Next step**: Orchestrator dispatches the mandatory independent Verifier
-  over T1-T20, including spec-anchored coverage and discrimination sensor.
-  This worker did not spawn nested agents or claim feature-level PASS.
+- **Next step**: Orchestrator dispatches a fresh independent Verifier over the
+  repaired feature, including F1/F2 regressions, REPLY-03 precision,
+  spec-anchored coverage and discrimination sensor. Existing `validation.md`
+  remains FAIL from pre-repair HEAD `0576807`; only the Verifier updates it.
+  This worker stops after repairs, with no nested agents.
 - **Blockers**: none
-- **Uncommitted files**: only pre-existing `.github/skills/` installation,
-  intentionally outside task commits
+- **Uncommitted files**: pre-existing `.github/` (skill installation),
+  `.specs/features/hey-mail-reader/validation.md`, `.specs/lessons.json`,
+  `.specs/LESSONS.md`; deliberately not modified or staged by this worker.
 - **Branch**: master; local only, no push/deploy
-- **Gates**: T12 baseline 123; batch quick gates T13 125, T14 130, T15 133,
-  T16 137, T17 140, T18 144, T19 148. T20 full build + lint + all 161 tests
-  passed (15 files, zero failed/skipped). All 38 new tests written first;
-  no prior tests weakened, removed, or skipped. Every task message checked
-  with `check_commit.py`; `.github/skills/` never staged.
-- **Browser checks**: Real open/seen, screening, three-reply Focus progression,
-  Feed/pile return, keyboard, persistence/reload, schema notice/reset exercised.
-  All routes at 390px/1440px without horizontal page overflow; desktop/mobile
-  screenshots inspected. Reduced motion computed `none`/`0s` versus normal
-  `arrive`/`0.18s`. Helper server stopped and demo storage restored.
-- **Core API**: `src/domain/triage.ts` exports `reduce`, `routeIncoming`,
-  `selectImbox`, `selectFeed`, `selectScreener`, `selectPile`,
-  `selectFocusReply`, `normalizeState`; `buildSeedState()` returns fresh seed.
-- **Repository API**: `src/data/repository.ts`: `repository` singleton,
-  `createRepository(getStorage?)`, `MailRepository`, `RepositoryNotice`,
-  `STORAGE_KEY`. Methods: `load`, `save`, `reset`, `getNotices`, `subscribe`.
-  Load caches per instance. Every diagnostic is logged and retained.
-  Read failure seeds; later write failure keeps latest triage in memory.
-  Fallback is sticky. Never discard notices.
-- **UI contract**: `AppShell` mounts `AppStoreProvider` once. `useAppState()` and
-  `useDispatch()` expose domain state/actions; dispatch `RESET_SEED` for reset.
-  `useAppNotices()` exposes live readonly notices, including failed save effects.
-  Notice union: core diagnostics; `seed-restored` / `invalid-json`;
-  `storage-unavailable` with `operation: load | save | reset`.
-  `NoticeBanner` renders `notice.message` nonblockingly. Notices persist through
-  save/reset. Exact messages: "Restored sample mailbox" and
-  "Changes won't be saved this session". README documents the full API.
-- **Sanitizer**: `src/lib/sanitize.ts` exports `sanitizeHtml(raw): string`.
-  Shared `EmailBody` uses it for reader, Screener, Focus, and Feed; no raw HTML
-  is appended. DOMPurify HTML-only profile preserves safe markup/remote images.
-- **Keyboard contract**: `j` selects first/next, `k` last/previous, bounded at
-  ends; `r/e` target selected or opened/focused message; `y/n` selected sender.
-  Editing, composition, repeat and modified key events are ignored.
-- **Clarifications**: sender kinds accept arrays; personal wins.
-  Pending mail has explicit `screener` box; P1 receipts use Imbox.
-  Piles and Focus are newest-first. Finish removes a reply and marks it seen;
-  remaining-queue cursor is zero. Explicit exit preserves the pile.
-  Core imports no browser/React/storage APIs. No new batch deviations.
+- **Gates**: T21 targeted 8, full 162; T22 targeted 111, full 192;
+  T23 targeted 38, final build + lint + all 192 tests passed (17 files,
+  zero failed/skipped). All original 161 tests unchanged; added 1 F1 test and
+  30 F2 cases. Test-first runs reproduced F1's stale reader and F2's import
+  crash. TypeScript caught a new guard narrowing error; corrected and full
+  gate rerun successfully. Task/spec validators pass; only the original three
+  build-only task warnings remain. Each commit message checked with
+  `check_commit.py`, with coauthor trailer.
+- **Seed/core contract**: `buildSeed()` returns validated `{state, diagnostics}`;
+  `buildSeedState()` and `seed` remain state-only helpers. Shared pure content
+  guards live in `src/domain/validation.ts`, avoiding dependency cycles.
+  `normalizeState` includes seed skip diagnostics in fallback results. Core
+  remains free of logging, React, DOM and storage.
+- **Reset/notice contract**: Store intercepts `RESET_SEED` at the event boundary,
+  invokes `repository.reset()` outside the reducer, and installs returned
+  state through pure internal `RESTORE_SEED`. The normal save effect also sees
+  restored state. Repository logs and publishes every seed skip; notices stay
+  nonblocking through `useAppNotices`. Other triage behavior is unchanged.
+- **Validation scope**: Real-shell RTL tests use actual routes, store and
+  repository with serialized storage; no new interactive/browser UAT claimed.
+  No helpers remain running and no dependency installation was needed.
