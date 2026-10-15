@@ -163,6 +163,16 @@ No existing code to reuse — the project is empty. This design sets the convent
 
 ## Data Models
 
+**Execution clarifications (T2)**:
+- SPEC_DEVIATION: `Sender.kind` accepts one kind or an array of kinds. The spec's
+  dual-classification edge cannot be represented by the original single literal.
+  Personal wins over newsletter.
+- SPEC_DEVIATION: `BoxKind` includes `screener`; pending mail needs a real location
+  distinct from rejected mail.
+- SPEC_DEVIATION: approved receipts use Imbox in P1. `paperTrail` remains a
+  reserved type, not an implemented route. This avoids hiding demo receipts behind
+  a deferred P2 UI and follows P1's approved-sender Imbox/newsletter Feed rule.
+
 ```typescript
 type SenderId = string
 type EmailId = string

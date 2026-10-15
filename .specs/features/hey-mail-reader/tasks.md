@@ -117,13 +117,19 @@ replaced it with the explicitly requested ESLint. Generated demo assets removed.
 
 **Done when**:
 
-- [ ] All types/enums from design exist and are exported
-- [ ] No TypeScript errors (`npm run build`)
+- [x] All types/enums from design exist and are exported
+- [x] No TypeScript errors (`npm run build`)
 
 **Tests**: none
 **Gate**: build
 
 **Commit**: `feat(domain): add mail reader domain models and action types`
+
+**Execution evidence (T2)**: Build + lint + tests passed (0 tests, matrix permits
+types-only tasks). A/C: type exports inspected in `src/domain/types.ts`;
+TypeScript build verifies the complete discriminated action union and models.
+B: no placeholder tests. D: AD-001/AD-004 followed. Design clarifications record
+plural classifications, explicit screener box, and receipts' P1 Imbox default.
 
 ---
 

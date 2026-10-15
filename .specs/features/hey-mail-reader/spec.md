@@ -280,6 +280,8 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Execution progress:** T1 foundation verified with build/lint/test (0 tests).
 No user-facing acceptance criterion is complete yet.
+T2 models compile; the design records representations for pending mail and the
+dual-classification edge. P2 Paper Trail remains deferred.
 
 ---
 
