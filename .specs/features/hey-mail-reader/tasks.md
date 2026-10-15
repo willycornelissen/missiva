@@ -876,14 +876,38 @@ not simulated by inventing a receive UI. No previous tests changed.
 
 **Done when**:
 
-- [ ] Pile shows count; Focus mode steps one-by-one and exits when empty (REPLY-01..05)
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests cover pile + focus stepping + exit; test count recorded (no silent deletions)
+- [x] Pile shows count; Focus mode steps one-by-one and exits when empty (REPLY-01..05)
+- [x] Gate check passes: `npm test`
+- [x] Component tests cover pile + focus stepping + exit; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(reply-later): add reply-later pile and focus & reply ui`
+
+**Execution evidence (T17)**: Three RED cases, then quick gate 140 passed,
+11 files, zero skipped/failed. Focus is explicitly local handling, never sending.
+
+| Criterion (A) | Exact assertion (`src/features/reply-later/ReplyLater.test.tsx`) | Outcome | Covered |
+| --- | --- | --- | --- |
+| REPLY-01/02 docking | `:15` `expect(screen.queryByRole('article', { name: 'Subject newer' })).not.toBeInTheDocument()`; `:17` `expect(screen.getAllByRole('article').map((row) => row.getAttribute('aria-label'))).toEqual(['Subject newer', 'Subject older'])`; `:26` `expect(screen.getByRole('link', { name: 'Reply Later, 1 email' })).toBeVisible()` | Removed from Imbox, dock opens ordered pile, live count | Yes |
+| REPLY-03 | `:19-23` `expect(screen.getAllByTestId('email-body')).toHaveLength(1)`; `expect(screen.getByTestId('email-body')).toHaveTextContent('Message newer')`; older/unrelated text absent; `expect(screen.getByText('Nothing is sent. Finishing marks this email handled.')).toBeVisible()` | One newest reply only; honest demo semantics | Yes |
+| REPLY-04 | `:25,27` `expect(screen.getByTestId('email-body')).toHaveTextContent('Message older')`; `expect(app.storedState().emails.newer).toEqual(message('newer', { receivedAt: '2026-10-11T09:00:00.000Z', seen: true }))` | Advances, complete correct persisted payload | Yes |
+| REPLY-05 | `:29-33` empty heading visible; finish absent; zero dock visible; `expect(app.storedState().focusReply).toEqual({ active: false, cursor: 0 })`; `expect(app.storedState().emails.older).toEqual(message('older', { seen: true }))` | Last completion exits, no skipped reply | Yes |
+| Open and explicit exit | `:40,44-47` body text Message waiting; visible waiting article and 1-count dock; focus inactive/cursor zero; `expect(app.storedState().emails.waiting.pile).toBe('replyLater')` | Reading works; exit preserves unfinished pile | Yes |
+| Initially empty | `:52-54` empty heading visible; `expect(screen.queryByRole('button', { name: 'Focus & Reply' })).not.toBeInTheDocument()`; zero dock visible | No invalid empty Focus start | Yes |
+
+| Assertions (C, same file) | Maps to | Keep |
+| --- | --- | --- |
+| `:15,17,26` membership/order/count above | REPLY-01/02 | Yes |
+| `:19-23` one body/excluded others/demo disclosure above | REPLY-03, no-send scope | Yes |
+| `:25,27,29-33` progression/completed payloads/empty state above | REPLY-04/05 | Yes |
+| `:40,44-47` body and retained pile/focus state above | T17 reading and explicit exit contract | Yes |
+| `:52-54` empty UI and zero count above | REPLY-05 | Yes |
+
+Adequacy A-D passed: full completed email values and focus fields, real
+cross-route interaction, all cases spec-linked; AD-004 followed. No prior tests
+changed or new deviations. Shared styling includes return-bar support for T18.
 
 ---
 

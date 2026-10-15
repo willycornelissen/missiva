@@ -5,6 +5,7 @@ import { AppStoreProvider, useAppState } from '../state/AppStore'
 import { PileDock } from '../features/common'
 import { ImboxView } from '../features/imbox/ImboxView'
 import { ScreenerView } from '../features/screener/ScreenerView'
+import { ReplyLater } from '../features/reply-later/ReplyLater'
 import styles from './AppShell.module.css'
 
 export function AppShell({ repository }: { repository?: MailRepository }) {
@@ -42,7 +43,8 @@ function Layout() {
         <Routes>
           <Route path="/imbox" element={<ImboxView />} />
           <Route path="/screener" element={<ScreenerView />} />
-          {navigation.filter(({ path }) => !['/imbox', '/screener'].includes(path)).map(({ path, title }) => <Route key={path} path={path} element={
+          <Route path="/reply-later" element={<ReplyLater />} />
+          {navigation.filter(({ path }) => !['/imbox', '/screener', '/reply-later'].includes(path)).map(({ path, title }) => <Route key={path} path={path} element={
             <section><h1>{title}</h1><p>Your mail, thoughtfully organized.</p></section>
           } />)}
           <Route path="*" element={<Navigate to="/imbox" replace />} />

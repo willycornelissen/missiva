@@ -317,6 +317,9 @@ returns the row to Previously seen; both empty paths pass (133 tests).
 T16 integrates SCRN-01..05: pending sender previews, approve-to-Imbox/Feed,
 reject-all-current messages, remembered decision after remount, and empty
 Screener (137 tests). Future-mail behavior remains covered by the pure core.
+T17 integrates REPLY-01..05 end to end: dock counts, expanded pile, safe
+reading, newest-first single-message Focus, complete progression/empty exit,
+and explicit exit preserving the pile (140 tests). No send operation exists.
 
 ---
 
