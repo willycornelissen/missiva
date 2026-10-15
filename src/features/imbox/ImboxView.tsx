@@ -12,8 +12,9 @@ export function ImboxView() {
   const [openId, setOpenId] = useState<string | null>(null)
   const { newForYou, previouslySeen } = selectImbox(state)
   const pending = selectScreener(state).length
-  const opened = openId ? state.emails[openId] : null
-  const selection = useMailShortcuts([...newForYou, ...previouslySeen], opened?.id, () => setOpenId(null))
+  const emails = [...newForYou, ...previouslySeen]
+  const opened = emails.find((email) => email.id === openId)
+  const selection = useMailShortcuts(emails, opened?.id, () => setOpenId(null))
   return <>
     <ViewHeader title="The Imbox" eyebrow="A LITTLE SPACE TO FOCUS" description="The important stuff. From the people you want to hear from." />
     {opened ? <MailReader email={opened} onClose={() => setOpenId(null)} /> : <>

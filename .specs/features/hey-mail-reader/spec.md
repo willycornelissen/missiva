@@ -246,7 +246,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | IMBOX-03 | P1: The Imbox | T4 core / T14-T15 UI | Implementing |
 | IMBOX-04 | P1: The Imbox | T4 selector / T15 UI | Implementing |
 | IMBOX-05 | P1: The Imbox | T9-T11 guard/repository/store complete / T20 notice | Implementing |
-| SCRN-01 | P1: The Screener | T5 core / T16 UI | Implementing |
+| SCRN-01 | P1: The Screener | T5 core / T16 UI / T21 reset-reader repair complete | Implementing |
 | SCRN-02 | P1: The Screener | T5 core / T16 UI | Implementing |
 | SCRN-03 | P1: The Screener | T5 core / T16 UI | Implementing |
 | SCRN-04 | P1: The Screener | T5 state + T10-T11 persistence/wiring complete | Implementing |
@@ -333,6 +333,10 @@ malformed-mail warning UI, and visible durable reset. Full build + lint +
 161 tests passed. Desktop/mobile browser flows and computed reduced-motion
 behavior passed. All 23 P1 requirements have task-local evidence; the
 orchestrator's independent Verifier must decide final Verified status.
+T21 repairs F1: reset after approving/opening a pending sender removes the
+ineligible Imbox reader, restores the complete persisted seed, and returns the
+sender to Screener. Ordinary open-to-seen still keeps the reader open. Full
+build + lint + 162 tests passed; independent re-verification remains pending.
 
 ---
 

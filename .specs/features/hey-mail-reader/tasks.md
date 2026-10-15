@@ -1195,3 +1195,114 @@ Execution is strictly sequential - there is no intra-phase parallelism.
 | T18 | Feature view | unit | component, ACs+empty | ✅ |
 | T19 | Feature view | unit | component, ACs+empty | ✅ |
 | T20 | Components/hook | unit | component | ✅ |
+
+---
+
+## Approved repair round 1 (F1/F2/F3)
+
+The user approved these bounded repairs and explicitly confirmed most recent
+first for Focus & Reply. Original tasks and tests remain intact. Each repair
+has its own local atomic commit; independent re-verification belongs to the
+orchestrator after this round, not this worker.
+
+### Phase 5: Independent verifier repairs
+
+```text
+T15 → T21
+T20 → T21
+T9 → T22
+T10 → T22
+T11 → T22
+T20 → T22
+T17 → T23
+```
+
+### T21: Remove reset-ineligible Imbox reader (F1)
+
+**What**: Resolve the open reader against current Imbox eligibility, not all
+stored mail. Preserve normal open-to-seen reading.
+**Where**: `src/features/imbox/ImboxView.tsx`
+**Depends on**: T15, T20
+**Reuses**: `selectImbox`, real-shell `renderMailbox`, bundled seed
+**Files**: ImboxView.tsx, new ImboxReset.test.tsx, tasks.md, spec.md
+
+**Done when**:
+
+- [x] Approve pending Noah, open his mail, then Reset demo restores the complete persisted seed.
+- [x] The now-ineligible reader/body and Imbox row disappear; Noah is pending again in Screener (SCRN-01/reset assumption).
+- [x] Ordinary opening still marks seen and retains the reader (IMBOX-02).
+
+**Tests**: unit (real-shell RTL regression, persisted state and visible outcomes)
+**Gate**: full; targeted `npm test -- src/features/imbox src/features/common/NoticeBanner.test.tsx`, then `npm run build && npm run lint && npm test`
+**Commit**: `fix(imbox): hide readers excluded by reset screening`
+
+**Execution evidence (T21)**: RED at `ImboxReset.test.tsx:21` reproduced the
+stale reader after the persisted seed assertions passed. Corrected the new
+test's reset-button query to its existing accessible name before that RED run.
+Selector eligibility now controls both list and reader. Targeted gate: 8 passed.
+Build + lint + all tests: 162 passed, 16 files, zero failed/skipped; original
+161 unchanged. Editor diagnostics clean.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Approve/open precondition | `src/features/imbox/ImboxReset.test.tsx:14-15`: `expect(screen.getByRole('region', { name: 'Reading Community garden introduction' })).toBeVisible()`; `expect(app.storedState().senders.noah.decision).toBe('approved')` | Real shell permits approved mail | Yes |
+| Reset complete stored seed | `ImboxReset.test.tsx:18-20`: `expect(app.storedState()).toEqual(seed)`; `expect(app.storedState().senders.noah.decision).toBe('pending')`; `expect(app.storedState().emails['mail-04'].box).toBe('screener')` | All seed fields restored; sender no longer eligible | Yes |
+| No stale reader/body/row | `ImboxReset.test.tsx:21-24`: `expect(screen.queryByRole('region', { name: 'Reading Community garden introduction' })).not.toBeInTheDocument()`; `expect(screen.queryByTestId('email-body')).not.toBeInTheDocument()`; `expect(screen.queryByRole('article', { name: 'Community garden introduction' })).not.toBeInTheDocument()`; `expect(screen.getByRole('region', { name: 'New for you' })).toBeVisible()` | SCRN-01 applies to reader as well as list | Yes |
+| Pending sender back in Screener | `ImboxReset.test.tsx:27-29`: `expect(noah).toBeVisible()`; `expect(within(noah).getByRole('button', { name: 'Yes, let them in: Noah de Vries' })).toBeVisible()` | Noah is available for screening again | Yes |
+| Ordinary open-to-seen retains reader | `src/features/imbox/ImboxView.test.tsx:23-24`: `expect(screen.getByTestId('email-body')).toHaveTextContent('Message fresh')`; `expect(storedState().emails.fresh.seen).toBe(true)`; `:27`: `expect(within(screen.getByRole('region', { name: 'Previously seen' })).getByRole('article', { name: 'Subject fresh' })).toBeVisible()` | IMBOX-02 opens and marks seen, not closes | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `ImboxReset.test.tsx:14-15` visible reader / approved decision above | SCRN-02, T21 workflow precondition | Yes |
+| `ImboxReset.test.tsx:18-20` full seed / pending / screener above | Confirmed reset assumption, SCRN-01 | Yes |
+| `ImboxReset.test.tsx:21-24` reader/body/row absence and list visibility above | SCRN-01, T21 no stale reader | Yes |
+| `ImboxReset.test.tsx:28-29` Noah and approval-button visibility above | Reset assumption, SCRN-01 | Yes |
+| `ImboxView.test.tsx:23-24,27` body/seen/row assertions above (unchanged) | IMBOX-02 regression guard | Yes |
+
+Adequacy A-D passed: exact persisted state and visible outcomes, not mock calls;
+every assertion maps to this repair/spec; AD-004/co-location followed.
+No previous test changed, weakened, removed or skipped. Independent verification
+remains pending.
+
+### T22: Validate raw bundled mail and surface seed diagnostics (F2)
+
+**What**: Validate raw seed messages before sender dereference/construction;
+skip malformed/missing-field and unknown-sender records, retain healthy
+records at stable source-index IDs, and report every skip via repository
+logger/notices on first load, fallback, and reset. Core stays pure and acyclic.
+**Where**: `src/data/seed.ts`
+**Depends on**: T9, T10, T11, T20
+**Reuses**: Existing content/record guards, normalization diagnostic union,
+repository logger/notices, real AppShell/store
+**Files**: seed.ts, new domain validation.ts, triage.ts, repository.ts,
+AppStore.tsx, new seed-validation.test.tsx, README.md, design.md, tasks.md, spec.md
+
+**Done when**:
+
+- [ ] Raw missing/invalid fields and unknown senders are skipped before constructing mail, without import-time failure; healthy records retain complete values and source-index IDs.
+- [ ] First load, invalid JSON/version/envelope fallback, storage failure, and repository reset expose exact skip diagnostics and log payloads while retaining healthy state.
+- [ ] Real-shell startup and Reset demo publish nonblocking skip notices, preserve healthy mail, and durably reset without side effects in the pure core.
+- [ ] Existing valid seed, persisted-state normalization, store behavior and all original tests remain intact.
+
+**Tests**: unit (seed/core/repository plus real-shell RTL reset diagnostic regression)
+**Gate**: full; targeted `npm test -- src/data src/domain/normalize.test.ts src/state/AppStore.test.tsx`, then `npm run build && npm run lint && npm test`
+**Commit**: `fix(data): validate bundled mail and report seed diagnostics`
+
+### T23: Specify newest-first Focus order (F3)
+
+**What**: Carry the user's explicit most-recent-first choice into REPLY-03.
+Keep approved design, implementation, and original ordering assertions intact.
+**Where**: `.specs/features/hey-mail-reader/spec.md`
+**Depends on**: T17
+**Reuses**: Approved design, existing triage and Reply Later regression tests
+**Files**: spec.md, tasks.md, STATE.md (Handoff only)
+
+**Done when**:
+
+- [ ] REPLY-03 explicitly says newest-first, consistent with approved design and user choice.
+- [ ] Existing core and real-shell tests assert newest reply first, older next, one message at a time; no behavior/test changes.
+- [ ] Final build/lint/all-tests gate passes with all 161 original tests retained; Handoff says repairs done, independent re-verification pending.
+
+**Tests**: unit (existing spec-derived core and UI regression assertions)
+**Gate**: build; targeted `npm test -- src/domain/triage.test.ts src/features/reply-later/ReplyLater.test.tsx`, then `npm run build && npm run lint && npm test`
+**Commit**: `docs(spec): specify newest-first focus reply order`
