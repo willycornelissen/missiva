@@ -70,5 +70,21 @@ loading starts from seed; a failed later write retains the latest triage rather
 than losing work. Reset still works in memory. Notices remain for the session,
 including after successful saves/reset; missing keys produce no notice.
 
+## React store
+
+`src/state/AppStore.tsx` exports `AppStoreProvider`, `useAppState()`,
+`useDispatch()`, and `useAppNotices()`. Mount the provider once around the app.
+It uses the browser `repository` by default; tests can supply an isolated
+`repository={createRepository(...)}`. Keep that adapter stable for the mount.
+
+The provider initializes from `load()`, delegates every `TriageAction` to the
+pure reducer, and saves on mount and every state change. Dispatch
+`{ type: 'RESET_SEED' }` to restore all seed fields and persist them through the
+same effect. Views must not access storage or call repository reset directly.
+`useAppNotices()` subscribes to the repository's current notice snapshot,
+including startup repairs and failures arising during later save effects.
+The eventual non-blocking banner should render notice messages from this hook.
+Hooks require the provider. No banner or mail-reader UI is implemented here.
+
 Sanitization and mail-reader views are implemented in later tasks;
 the current app is only the foundation shell.

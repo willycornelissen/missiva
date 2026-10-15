@@ -132,8 +132,16 @@ No existing code to reuse — the project is empty. This design sets the convent
 - **Interfaces**:
   - `<AppStoreProvider>` — initializes from `repository.load()`, persists on each change
   - `useAppState()` / `useDispatch()` hooks
+  - `useAppNotices()` — current repository diagnostics for the future banner
 - **Dependencies**: Triage Core, Repository.
 - **Reuses**: none.
+- **Execution clarification (T11)**: Provider accepts an optional stable
+  `repository` prop for isolated tests. `useReducer` loads initial state; an
+  effect saves on mount and state changes. `RESET_SEED` follows the same pure
+  reducer/effect path rather than writing storage inside a reducer/dispatch.
+  `useSyncExternalStore` retains startup notices and observes failed saves
+  without coupling UI to browser storage. Provider/hook exports share one
+  public entry point, with a scoped Fast Refresh export-rule exception.
 
 ### HTML Sanitizer (`src/lib/sanitize.ts`)
 

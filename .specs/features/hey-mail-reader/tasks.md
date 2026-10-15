@@ -573,15 +573,46 @@ design/README. Exact banner strings follow the design. No spec deviation.
 
 **Done when**:
 
-- [ ] Provider seeds from repository and persists on dispatch
-- [ ] Hooks expose state and dispatch; reset works
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests cover persist-on-dispatch + reset; test count recorded (no silent deletions)
+- [x] Provider seeds from repository and persists on dispatch
+- [x] Hooks expose state and dispatch; reset works
+- [x] Gate check passes: `npm test`
+- [x] Component tests cover persist-on-dispatch + reset; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(state): add app store context with persistence wiring`
+
+**Execution evidence (T11)**: Tests written first; targeted RED confirmed missing
+AppStore module. `npm test`: 116 passed, 5 files, 0 failed/skipped (+7).
+Targeted ESLint on repository/store code and tests also passed with no warnings.
+No previous tests changed. Tests render a consumer of all three hooks and
+inspect both displayed state/notices and actual persisted JSON, not save spies.
+
+| Criterion (A) | Assertion evidence (`src/state/AppStore.test.tsx`) | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Persisted initialization, hooks, each dispatch, reload | `:40-57` `expect(currentState()).toEqual(initial)`; `expect(currentNotices()).toEqual([])`; `expect(currentState().emails['mail-31'].seen).toBe(true)`; `expect(currentState().senders.noah.decision).toBe('approved')`; `expect(currentState().emails['mail-04'].box).toBe('imbox')`; `expect(currentState().emails['mail-02'].pile).toBe('setAside')`; `expect(storedState()).toEqual(currentState())`; `expect(currentState()).toEqual(beforeReload)` | Loaded state, real hook dispatch, every full state saved, SCRN-04 survives reload | Yes |
+| Seed initialization and reset | `:62-71` `expect(currentState()).toEqual(buildSeedState())`; `expect(storedState()).toEqual(buildSeedState())`; `expect(currentState()).not.toEqual(buildSeedState())`; `expect(createRepository().load()).toEqual(buildSeedState())` | Seed initially and after reset; all fields durably restored | Yes |
+| IMBOX-05 startup notice survives mount effect | `:77-81` `expect(currentState()).toEqual(buildSeedState())`; `expect(storedState()).toEqual(buildSeedState())`; `expect(currentNotices()).toEqual([{code:'seed-restored',reason:'schema-version',message:'Restored sample mailbox'}])` | Restored state and exact non-blocking notice available, even under StrictMode | Yes |
+| Malformed mail warnings reach consumers | `:90-96` `expect(currentState().emails['mail-01']).toBeUndefined()`; `expect(currentState().emails['mail-02']).toEqual(state.emails['mail-02'])`; `expect(storedState()).toEqual(currentState())`; `expect(currentNotices()).toEqual([{code:'malformed-email',emailId:'mail-01',message:'Skipped malformed email "mail-01"'},{code:'state-repaired',field:'order',message:'Repaired mailbox receive order'}])` | Bad record skipped, healthy retained, full diagnostics surfaced | Yes |
+| Later failed-save notice and memory reset | `:109-122` `expect(currentNotices()).toEqual([])` then `expect(currentNotices()).toEqual(notices)`; `expect(currentState().emails['mail-31'].seen).toBe(true)`; `expect(repo.load()).toEqual(currentState())`; `expect(storedState().emails['mail-31'].seen).toBe(false)`; `expect(currentState()).toEqual(buildSeedState())`; `expect(repo.load()).toEqual(buildSeedState())` | Observable save-failure code/operation/message, no lost triage, reset still works | Yes |
+| Unavailable storage at startup | `:128-137` `expect(currentState()).toEqual(buildSeedState())`; `expect(currentNotices()).toEqual([{code:'storage-unavailable',operation:'load',message:"Changes won't be saved this session"}])`; `expect(currentState().emails['mail-02'].pile).toBe('setAside')`; `expect(repo.load()).toEqual(currentState())`; `expect(repo.load()).toEqual(buildSeedState())` | Seed, warning, functioning in-memory dispatch/reset | Yes |
+| Default browser adapter | `:142-145` `expect(currentState()).toEqual(buildSeedState())`; `expect(storedState().emails['mail-31'].seen).toBe(true)`; `expect(currentState()).toEqual(storedState())` | Provider works without test injection | Yes |
+
+| Assertions (C, same file) | Maps to | Keep |
+| --- | --- | --- |
+| `:40-57` exact state/notice/field/storage assertions above | T11 init/hooks/persist, SCRN-04 wiring | Yes |
+| `:62-71` seed/change/reset/storage assertions above | T11 initialization/reset | Yes |
+| `:77-81` seed and exact notice payload above | IMBOX-05 through React/store | Yes |
+| `:90-96` skipped/healthy/persisted/diagnostic assertions above | Malformed mail edge, diagnostic delivery through hooks | Yes |
+| `:109-122` seen/memory/storage/notice/reset assertions above | Storage-full edge through persistence effect | Yes |
+| `:128-137` seed/notice/pile/memory/reset assertions above | Storage unavailable edge through provider | Yes |
+| `:142-145` seed/persisted/current state assertions above | T11 default repository wiring | Yes |
+
+Adequacy A-D passed: every task outcome and relevant error path has complete
+state/notice assertions; all tests required by adapter wiring; no mock-only or
+unclaimed tests. AD-004/RTL co-location followed. No spec deviation; hook notice
+interface and reset effect path documented in design/README. Banner is T20.
 
 ---
 
