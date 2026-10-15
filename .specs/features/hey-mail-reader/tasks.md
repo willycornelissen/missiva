@@ -239,16 +239,41 @@ matches the design's global receive order and Feed convention.
 
 **Done when**:
 
-- [ ] Pending senders stay out of Imbox/Feed and appear in Screener (SCRN-01)
-- [ ] Approve routes current+future mail; reject suppresses it (SCRN-02, SCRN-03)
-- [ ] Decision persists per sender (SCRN-04); empty-screener selector path covered (SCRN-05)
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests map 1:1 to SCRN-01..05; test count recorded (no silent deletions)
+- [x] Pending senders stay out of Imbox/Feed and appear in Screener (SCRN-01)
+- [x] Approve routes current+future mail; reject suppresses it (SCRN-02, SCRN-03)
+- [x] Decision persists per sender (SCRN-04); empty-screener selector path covered (SCRN-05)
+- [x] Gate check passes: `npm test`
+- [x] Unit tests map 1:1 to SCRN-01..05; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(triage): add screener decisions and sender routing`
+
+**Execution evidence (T5)**: `npm test`: 12 passed (+6), 0 skipped/failed.
+Decision persistence here means immutable per-sender state; durable storage is
+T10. Screener empty rendering remains T16. `routeIncoming` expects an existing
+sender record (pending for first-time senders); duplicate IDs are not inserted.
+
+| Criterion (A) | Assertion evidence (`src/domain/triage.test.ts`) | Outcome |
+| --- | --- | --- |
+| SCRN-01 | `:46-49` `expect(selectImbox(next)).toEqual({ newForYou: [], previouslySeen: [] })`; incoming email equals `{...email('second'), box:'screener', originBox:'screener'}`; `expect(selectScreener(next)).toEqual([unknown])` | Pending mail isolated, sender listed once |
+| SCRN-02 | `:62-66` `expect(next.emails[id]).toEqual(email(id, { box, originBox: box }))`; sender equals approved sender; screener equals `[]`; original equals snapshot | Every current/future personal/newsletter routed correctly |
+| SCRN-03 | `:77-81` `expect(next.emails[id]).toEqual(email(id, { box: 'screenedOut', originBox: 'screenedOut' }))`; decision equals rejected; Imbox IDs equal `['other']` | Rejection clears both piles, suppresses future mail |
+| SCRN-04 | `:89-92` `expect(repeated).toEqual(approved)`; decision equals approved; Imbox IDs equal `['future', 'first']`; screener equals `[]` | Sender screened once |
+| SCRN-05 | `:96-98` `expect(selectScreener(...)).toEqual([])` for no mail, approved, rejected | Empty selector paths |
+
+| Assertions (C) | Requirement | Keep |
+| --- | --- | --- |
+| `triage.test.ts:46-49`, exact pending state above | SCRN-01 | Yes |
+| `triage.test.ts:62-66`, current/future payload above | SCRN-02, immutable core | Yes |
+| `triage.test.ts:77-81`, rejected state above | SCRN-03 | Yes |
+| `triage.test.ts:89-92`, remembered state above | SCRN-04 | Yes |
+| `triage.test.ts:96-98`, empty arrays above | SCRN-05 | Yes |
+
+Adequacy A-D passed: full state payloads and every screening branch checked,
+no shallow/unclaimed tests; AD-004 followed. T4 evidence lines refer to its
+commit; later additions shifted the open/flags/empty assertions to :106-122.
 
 ---
 

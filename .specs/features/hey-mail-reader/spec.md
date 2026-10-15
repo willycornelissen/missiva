@@ -246,11 +246,11 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | IMBOX-03 | P1: The Imbox | T4 core / T14-T15 UI | Implementing |
 | IMBOX-04 | P1: The Imbox | T4 selector / T15 UI | Implementing |
 | IMBOX-05 | P1: The Imbox | Design | Pending |
-| SCRN-01 | P1: The Screener | Design | Pending |
-| SCRN-02 | P1: The Screener | Design | Pending |
-| SCRN-03 | P1: The Screener | Design | Pending |
-| SCRN-04 | P1: The Screener | Design | Pending |
-| SCRN-05 | P1: The Screener | Design | Pending |
+| SCRN-01 | P1: The Screener | T5 core / T16 UI | Implementing |
+| SCRN-02 | P1: The Screener | T5 core / T16 UI | Implementing |
+| SCRN-03 | P1: The Screener | T5 core / T16 UI | Implementing |
+| SCRN-04 | P1: The Screener | T5 state / T10 persistence | Implementing |
+| SCRN-05 | P1: The Screener | T5 selector / T16 UI | Implementing |
 | REPLY-01 | P1: Reply Later + Focus & Reply | Design | Pending |
 | REPLY-02 | P1: Reply Later + Focus & Reply | Design | Pending |
 | REPLY-03 | P1: Reply Later + Focus & Reply | Design | Pending |
@@ -276,7 +276,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; 4 mapped with core evidence, 26 awaiting implementation.
+**Coverage:** 30 total; 9 mapped with core evidence, 21 awaiting implementation.
 Task-local assertion evidence is recorded under each completed task in `tasks.md`;
 Implementing means core covered, not full UI acceptance or independent verification.
 
