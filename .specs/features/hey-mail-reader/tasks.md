@@ -778,15 +778,37 @@ all tests necessary, AD-004/co-location followed. No previous tests changed.
 
 **Done when**:
 
-- [ ] Renders both groups; opening a new email moves it to seen (IMBOX-01..03)
-- [ ] Empty New-for-you shows a dedicated empty state (IMBOX-04)
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests cover IMBOX-01..04; test count recorded (no silent deletions)
+- [x] Renders both groups; opening a new email moves it to seen (IMBOX-01..03)
+- [x] Empty New-for-you shows a dedicated empty state (IMBOX-04)
+- [x] Gate check passes: `npm test`
+- [x] Component tests cover IMBOX-01..04; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(imbox): add imbox view with new/seen groups`
+
+**Execution evidence (T15)**: Three RED view tests, then quick gate 133 passed,
+9 files, zero failed/skipped. Imbox route is real; reading uses the safe seam.
+
+| Criterion (A) | Exact assertion (`src/features/imbox/ImboxView.test.tsx`) | Outcome | Covered |
+| --- | --- | --- | --- |
+| IMBOX-01/03 | `:17-20` `expect(fresh.compareDocumentPosition(seen) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()`; `expect(within(fresh).getByRole('article', { name: 'Subject fresh' })).toBeVisible()`; `expect(within(fresh).getByLabelText('Unseen')).toBeVisible()`; seen row equivalent | New above Seen, correct membership and indicator | Yes |
+| Pile/screener isolation | `:21-22` `expect(screen.queryByRole('article', { name: 'Subject aside' })).not.toBeInTheDocument()` and pending equivalent | Neither leaks into Imbox | Yes |
+| IMBOX-02 | `:24-29` `expect(screen.getByTestId('email-body')).toHaveTextContent('Message fresh')`; `expect(storedState().emails.fresh.seen).toBe(true)`; `expect(within(screen.getByRole('region', { name: 'New for you' })).queryByRole('article')).not.toBeInTheDocument()`; `expect(within(screen.getByRole('region', { name: 'Previously seen' })).getByRole('article', { name: 'Subject fresh' })).toBeVisible()`; `expect(screen.getByRole('link', { name: 'The Imbox 0' })).toBeVisible()` | Body opens, persisted seen, correct destination/count | Yes |
+| IMBOX-04, seen retained | `:34-35` `expect(within(screen.getByRole('region', { name: 'New for you' })).getByRole('heading', { name: "You're all caught up" })).toBeVisible()`; `expect(within(screen.getByRole('region', { name: 'Previously seen' })).getByText('Subject read')).toBeVisible()` | Dedicated new-empty state without losing seen mail | Yes |
+| Completely empty | `:39-41` `expect(screen.getByRole('heading', { name: "You're all caught up" })).toBeVisible()`; `expect(screen.getByRole('heading', { name: 'A fresh start' })).toBeVisible()`; `expect(screen.queryByRole('article')).not.toBeInTheDocument()` | Both friendly empty sections | Yes |
+
+| Assertions (C, same file) | Maps to | Keep |
+| --- | --- | --- |
+| `:17-20` ordering/membership/indicator above | IMBOX-01/03 | Yes |
+| `:21-22` absent rows above | ASIDE-04, SCRN-01 | Yes |
+| `:24-29` body/seen/membership/count above | IMBOX-02 and persistence assumption | Yes |
+| `:34-35,39-41` empty states and retained seen row above | IMBOX-04 / empty-state assumption | Yes |
+
+Adequacy A-D passed: visible behavior and persisted value checked, no shallow or
+unclaimed tests, AD-004 followed. Empty-state copy is a UI choice (spec requires
+dedicated states, not exact wording). No prior tests changed.
 
 ---
 

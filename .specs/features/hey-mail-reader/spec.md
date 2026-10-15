@@ -311,6 +311,9 @@ Implementing until their views and independent verification are complete.
 T14 adds visible unseen indicators, counted bottom-docked pile navigation,
 shared empty states, and the sanitized reader seam (130 tests). Row triage
 controls exercise real store updates, including single-pile conflict behavior.
+T15 integrates IMBOX-01..04 and ASIDE-04/SCRN-01 isolation through the real
+route/store. Opening displays the body, persists seen, updates the count, and
+returns the row to Previously seen; both empty paths pass (133 tests).
 
 ---
 

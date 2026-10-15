@@ -3,6 +3,7 @@ import type { MailRepository } from '../data/repository'
 import { selectFeed, selectImbox, selectPile, selectScreener } from '../domain/triage'
 import { AppStoreProvider, useAppState } from '../state/AppStore'
 import { PileDock } from '../features/common'
+import { ImboxView } from '../features/imbox/ImboxView'
 import styles from './AppShell.module.css'
 
 export function AppShell({ repository }: { repository?: MailRepository }) {
@@ -38,7 +39,8 @@ function Layout() {
       <header className={styles.topbar}><span>A fresh perspective on email</span><span className={styles.demoBadge}>DEMO MAILBOX</span></header>
       <main id="mailbox" className={styles.main} tabIndex={-1}>
         <Routes>
-          {navigation.map(({ path, title }) => <Route key={path} path={path} element={
+          <Route path="/imbox" element={<ImboxView />} />
+          {navigation.filter(({ path }) => path !== '/imbox').map(({ path, title }) => <Route key={path} path={path} element={
             <section><h1>{title}</h1><p>Your mail, thoughtfully organized.</p></section>
           } />)}
           <Route path="*" element={<Navigate to="/imbox" replace />} />

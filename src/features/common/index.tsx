@@ -46,7 +46,7 @@ export function EmailBody({ email }: { email: Email }) {
 export function MailReader({ email, onClose }: { email: Email; onClose: () => void }) {
   const sender = useAppState().senders[email.senderId]
   return <section className={styles.reader} aria-label={`Reading ${email.subject}`}>
-    <div className={styles.readerToolbar}><button className={styles.back} onClick={onClose}>← Back to mail</button><MailActions email={email} onDone={onClose} /></div>
+    <div className={styles.readerToolbar}><button className={styles.back} aria-label="Back to mail" onClick={onClose}>← Back to mail</button><MailActions email={email} onDone={onClose} /></div>
     <h2 className={styles.readerTitle}>{email.subject || '(No subject)'}</h2>
     <div className={styles.senderDetail}><Avatar sender={sender} /><div><strong>{sender.name}</strong><span>{sender.address}</span></div>
       <time dateTime={email.receivedAt}>{new Date(email.receivedAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</time></div>
