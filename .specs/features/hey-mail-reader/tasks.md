@@ -685,15 +685,33 @@ Verifier remain the orchestrator's next batch; no final validation claimed.
 
 **Done when**:
 
-- [ ] All five routes render their placeholder view within the shell
-- [ ] Shell mounts the AppStore provider
-- [ ] Gate check passes: `npm test`
-- [ ] Component test covers route navigation; test count recorded (no silent deletions)
+- [x] All five routes render their placeholder view within the shell
+- [x] Shell mounts the AppStore provider
+- [x] Gate check passes: `npm test`
+- [x] Component test covers route navigation; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(app): add shell layout and client routing`
+
+**Execution evidence (T13)**: RED (missing shell), then `npm test`: 125 passed,
+7 files, zero skipped/failed. Router dependency declared before installation.
+Responsive CSS Modules shell mounts one provider; wildcard routes redirect.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Five routes and navigation | `src/app/AppShell.test.tsx:18` `expect(screen.getByRole('heading', { level: 1, name: title })).toBeVisible()`; `:19` `expect(within(nav).getByRole('link', { name: new RegExp(title) })).toHaveAttribute('aria-current', 'page')` | All five named route views, active navigation | Yes |
+| Provider and fallback route | `src/app/AppShell.test.tsx:28-30` `expect(screen.getByRole('heading', { level: 1, name: 'The Imbox' })).toBeVisible()`; `expect(screen.getByRole('link', { name: 'The Imbox 0' })).toHaveAttribute('aria-current', 'page')`; `expect(screen.getByRole('main')).toBeVisible()` | Empty stored mailbox drives count in shell; fallback Imbox | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `AppShell.test.tsx:18-19` heading visibility and active route above | T13 five routes | Yes |
+| `AppShell.test.tsx:28-30` heading, zero count, main above | T13 provider/routing, empty-state assumption | Yes |
+
+Adequacy A-D passed: real route/state output, all tests necessary, AD-004 and
+co-location followed. No existing tests changed. Views are temporary only until
+their assigned tasks; no completed UI story claimed yet.
 
 ---
 

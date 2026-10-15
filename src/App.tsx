@@ -1,5 +1,8 @@
+import { BrowserRouter } from 'react-router-dom'
+import { AppShell } from './app/AppShell'
+
 function App() {
-  return <main><h1>Missiva</h1></main>
+  return <BrowserRouter><AppShell /></BrowserRouter>
 }
 
 export default App

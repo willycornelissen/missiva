@@ -305,6 +305,9 @@ T12 verifies the sanitizer edge with scripts, event handlers, embedded content,
 executable URL variants, safe formatting/links/tables/images, and plain/empty
 bodies. The phase boundary build + lint + all 123 tests passed. Rendering-time
 integration remains T14/T19; final independent verification remains after T20.
+T13 mounts the persistent store and five client routes in a responsive shell;
+navigation and empty stored counts verified (125 tests). UI stories remain
+Implementing until their views and independent verification are complete.
 
 ---
 

@@ -1,10 +1,26 @@
 :root {
-  font-family: system-ui, sans-serif;
-  color: #242333;
-  background: #faf9f6;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  --ink: #2d3032;
+  --muted: #74766f;
+  --canvas: #f7f6f2;
+  --line: #e6e5df;
+  --purple: #62528b;
+  --purple-soft: #eeebf5;
+  --orange: #d98c60;
+  color: var(--ink);
+  background: var(--canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
 body { margin: 0; }
 * { box-sizing: border-box; }
+button, input, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+a { color: var(--purple); }
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px solid #9c87c7; outline-offset: 3px; }
+button:disabled { cursor: default; opacity: .6; }
+h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(32px, 4vw, 44px); font-weight: 400; letter-spacing: -1.7px; margin: 0 0 10px; }
+h2, h3, p { margin-top: 0; }
+::selection { background: #e1d8ef; }
