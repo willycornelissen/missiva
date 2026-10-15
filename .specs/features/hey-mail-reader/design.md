@@ -90,7 +90,9 @@ No existing code to reuse — the project is empty. This design sets the convent
   - `selectScreener(state): Sender[]`
   - `selectPile(state, pile: PileKind): Email[]`
   - `routeIncoming(state, email): AppState` — applies screening/classification rules
-- **Dependencies**: Domain Models.
+  - `selectFocusReply(state): Email | null` — one active reply
+  - `normalizeState(input: unknown): NormalizationResult` — validated state plus diagnostics
+- **Dependencies**: Domain Models and the pure static seed factory for reset/fallback.
 - **Reuses**: none.
 
 ### Seed Data (`src/data/seed.ts`)
@@ -178,6 +180,13 @@ No existing code to reuse — the project is empty. This design sets the convent
   queue, instead of incrementing into a shrinking list and skipping an email.
   `selectFocusReply(state)` exposes exactly the active email or `null`.
   Explicit exit leaves the remaining pile intact.
+- `normalizeState` returns `{state, restoredSeed, diagnostics}`. It restores
+  invalid envelopes/unknown versions, skips malformed records, and explicitly
+  signals repairs to order/routing/focus. Valid empty mailboxes remain empty.
+  SPEC_DEVIATION: warnings are returned as structured diagnostics, not logged by
+  the core. T10/T11 adapters must log malformed-record warnings and retain notices
+  for T20's non-blocking banner. This preserves AD-001's pure core.
+  Missing storage keys are not corruption; adapters use a fresh seed directly.
 
 ```typescript
 type SenderId = string

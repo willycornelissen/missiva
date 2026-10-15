@@ -48,3 +48,15 @@ export type TriageAction =
   | { type: 'FOCUS_REPLY_NEXT' }
   | { type: 'FOCUS_REPLY_EXIT' }
   | { type: 'RESET_SEED' }
+
+export type NormalizationDiagnostic =
+  | { code: 'seed-restored'; reason: 'schema-version' | 'invalid-state'; message: string }
+  | { code: 'malformed-email'; emailId: EmailId; message: string }
+  | { code: 'malformed-sender'; senderId: SenderId; message: string }
+  | { code: 'state-repaired'; field: 'order' | 'routing' | 'focusReply'; message: string }
+
+export interface NormalizationResult {
+  state: AppState
+  restoredSeed: boolean
+  diagnostics: NormalizationDiagnostic[]
+}

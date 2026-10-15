@@ -448,16 +448,52 @@ directions tested, no shallow/unclaimed tests; AD-004/co-location followed.
 
 **Done when**:
 
-- [ ] Unknown `schemaVersion` falls back to seed with a signalled notice flag (IMBOX-05)
-- [ ] Malformed/missing-field emails are skipped, not fatal (spec edge case)
-- [ ] `RESET_SEED` restores the seed
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests cover IMBOX-05 + malformed edge; test count recorded (no silent deletions)
+- [x] Unknown `schemaVersion` falls back to seed with a signalled notice flag (IMBOX-05)
+- [x] Malformed/missing-field emails are skipped, not fatal (spec edge case)
+- [x] `RESET_SEED` restores the seed
+- [x] Gate check passes: `npm test`
+- [x] Unit tests cover IMBOX-05 + malformed edge; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(triage): add schema-version guard and malformed-email handling`
+
+**Execution evidence (T9)**: Required phase-boundary
+`npm run build && npm run lint && npm test` passed. 97 tests, 3 files,
+0 failed/skipped (+60 normalization cases). Repeated `npm test` also passed.
+Core imports only models and the pure static seed factory, not React/DOM/storage.
+
+| Criterion (A) | Assertion evidence (`src/domain/normalize.test.ts`) | Outcome |
+| --- | --- | --- |
+| IMBOX-05, unknown version | `:9-13` `expect(result.state).toEqual(buildSeedState())`; restored flag `true`; diagnostics exactly `[{code:'seed-restored',reason:'schema-version',message:'Restored sample mailbox'}]` | Fresh seed and explicit notice for six version variants |
+| Invalid envelope fallback | `:22-25` `expect(normalizeState(input)).toEqual({state:buildSeedState(),restoredSeed:true,diagnostics:[{code:'seed-restored',reason:'invalid-state',message:'Restored sample mailbox'}]})` | Eight malformed envelopes handled |
+| Preserve healthy/empty state | `:36-44` full result equals unchanged state with no diagnostics; `expect(state).toEqual(before)`; returned state/email not aliases; empty state stays empty | No unwanted resets or lost triage |
+| Missing email fields | `:58-66` restored flag `false`; bad email undefined; order excludes ID; count `39`; healthy email exact; diagnostic includes code, emailId, message; input unchanged | Every required field covered separately |
+| Malformed email values/records | `:81-97` bad record undefined; count `39`/order excludes ID; diagnostic equals identified malformed email warning | Invalid values and non-object records skipped |
+| Malformed sender/orphaned mail | `:108-118` sender undefined; email count `36`; healthy email exact; malformed sender and each dependent email diagnostic checked | No invalid sender reaches routing |
+| Order recovery | `:126-130` `expect(result.state.order).toEqual(state.order)`; emails unchanged; order repair diagnostic exact | No duplicate, dangling, lost, or unsorted IDs |
+| Routing recovery | `:141-150` complete email assertions restore personal/receipt Imbox, pending Screener, rejected screenedOut; kind array preserved but cloned; routing diagnostic exact | Screening/classification/pile invariants maintained |
+| Focus recovery | `:161-166` focus equals `{active,cursor:0}`; reply count `2`; current equals mail-38 or null; focus diagnostic exact | Invalid cursor/flags repaired without losing replies |
+| Dropped final reply | `:175-180` pile `[]`; focus inactive, cursor `0`; current null; repair diagnostic exact | Malformed final replies cannot leave active empty Focus |
+| RESET_SEED | `:187-193` `expect(reset).toEqual(buildSeedState())`; changed state remains piled; subsequent reset/fallback equal original after mutating first reset | Complete independent fresh reset |
+
+| Assertions (C) | Requirement | Keep |
+| --- | --- | --- |
+| `normalize.test.ts:9-25`, exact fallback payloads above | IMBOX-05, T9 load guard | Yes |
+| `normalize.test.ts:36-44`, exact retained states above | Persistence/empty-state assumptions; pure core | Yes |
+| `normalize.test.ts:58-97`, skipped IDs and diagnostic payloads above | Malformed/missing-field edge | Yes |
+| `normalize.test.ts:108-118`, sender/orphan payloads above | T9 valid load-guard references | Yes |
+| `normalize.test.ts:126-150`, repaired state/diagnostics above | T9 normalization; SCRN/FEED/dual-classification invariants | Yes |
+| `normalize.test.ts:161-180`, focus state/diagnostics above | T9 normalization; REPLY-03/05 | Yes |
+| `normalize.test.ts:187-193`, complete reset state above | T9 RESET_SEED | Yes |
+
+Adequacy A-D passed: required fields parameterized individually, complete
+diagnostic payloads checked, no shallow/unclaimed tests, AD-004/co-location
+followed. No tests weakened, removed, or skipped. Diagnostic messages and repair
+semantics are documented adapter contracts; only the seed-restore notice text
+was prescribed by the design. T10/T11 must surface diagnostics; T20 owns banners.
+No feature completion claim or Verifier run: T10-T20 remain.
 
 ---
 

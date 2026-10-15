@@ -245,7 +245,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | IMBOX-02 | P1: The Imbox | T4 core / T15 UI | Implementing |
 | IMBOX-03 | P1: The Imbox | T4 core / T14-T15 UI | Implementing |
 | IMBOX-04 | P1: The Imbox | T4 selector / T15 UI | Implementing |
-| IMBOX-05 | P1: The Imbox | Design | Pending |
+| IMBOX-05 | P1: The Imbox | T9 guard / T10-T11 adapter / T20 notice | Implementing |
 | SCRN-01 | P1: The Screener | T5 core / T16 UI | Implementing |
 | SCRN-02 | P1: The Screener | T5 core / T16 UI | Implementing |
 | SCRN-03 | P1: The Screener | T5 core / T16 UI | Implementing |
@@ -276,7 +276,9 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; 22 mapped with core evidence, 8 awaiting implementation.
+**Coverage:** 30 total; all 23 P1 requirements mapped with core evidence;
+7 deferred P2/P3 requirements remain pending. UI/persistence and independent
+verification remain outstanding for P1.
 Task-local assertion evidence is recorded under each completed task in `tasks.md`;
 Implementing means core covered, not full UI acceptance or independent verification.
 
@@ -288,6 +290,9 @@ T3 supplies the bundled 40-email JSON and fresh `buildSeedState()` factory;
 seed completeness and demo coverage verified by 2 tests.
 T6 verifies the dual-classification edge: personal wins regardless of kind order.
 T8 verifies both directions of the most-recent-pile conflict edge and restoration.
+T9 verifies unknown-version fallback, explicit notices, skipped malformed
+records, invariant repairs, and fresh reset (97 total tests). Malformed-record
+warnings are pure diagnostics; adapter logging and visible notices remain T10-T20.
 
 ---
 
