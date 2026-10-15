@@ -86,5 +86,14 @@ including startup repairs and failures arising during later save effects.
 The eventual non-blocking banner should render notice messages from this hook.
 Hooks require the provider. No banner or mail-reader UI is implemented here.
 
-Sanitization and mail-reader views are implemented in later tasks;
-the current app is only the foundation shell.
+## Email body rendering
+
+`src/lib/sanitize.ts` exports `sanitizeHtml(raw: string): string`, wrapping
+DOMPurify with its HTML-only profile. Scripts, event handlers, executable URLs,
+and active non-HTML content are removed. Safe formatting, HTTPS links, tables,
+plain text, and inline remote images are retained (pixel blocking is not P1).
+Views must call this at every email HTML render seam and must not append raw
+markup after sanitizing. The helper needs a browser DOM (jsdom in tests).
+
+Mail-reader views and their sanitizer integration are implemented in T13-T20;
+the current app is still only the foundation shell.

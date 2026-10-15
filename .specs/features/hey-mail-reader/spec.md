@@ -301,6 +301,10 @@ T11 verifies provider initialization, dispatch/save/reload, complete reset,
 startup diagnostics, and live failed-save notices through React consumers
 (116 total tests). State and notice hooks are ready for T13-T20; no UI AC or
 independent verification is claimed complete.
+T12 verifies the sanitizer edge with scripts, event handlers, embedded content,
+executable URL variants, safe formatting/links/tables/images, and plain/empty
+bodies. The phase boundary build + lint + all 123 tests passed. Rendering-time
+integration remains T14/T19; final independent verification remains after T20.
 
 ---
 

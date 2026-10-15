@@ -37,34 +37,44 @@
 ## Handoff
 
 - **Feature**: hey-mail-reader (`.specs/features/hey-mail-reader/`)
-- **Phase / Task**: Execute / batch 1 complete (T1-T9)
-- **Completed**: Foundation and pure triage core, 40-email static JSON seed,
-  schema/record normalization with diagnostics. Atomic task commits T1-T9;
-  task-local gates and adequacy evidence recorded in `tasks.md`.
+- **Phase / Task**: Execute / batch 2 complete (T10-T12); T1-T12 complete
+- **Completed**: Core/seed plus storage repository, AppStore provider/hooks,
+  DOMPurify sanitizer. T10 `8d57d32`, T11 `4fb6400`, T12 in this atomic task
+  commit. Task-local exact assertion/traceability evidence is in `tasks.md`.
 - **In-progress** (file:line): none
-- **Next step**: Execute approved batch 2, T10-T12 (repository, AppStore,
-  sanitizer), then batch 3 T13-T20, then independent verification.
-  Do not treat pure core evidence as completed UI acceptance.
+- **Next step**: Execute approved batch 3 T13-T20, then independent verification.
+  No UI acceptance is claimed by adapter/core tests.
 - **Blockers**: none
 - **Uncommitted files**: only pre-existing `.github/skills/` installation,
   intentionally outside task commits
 - **Branch**: master; local only, no push/deploy
-- **Gates**: T1/T2 build + lint + tests passed (0 tests); T3 phase boundary
-  build + lint + 2 tests passed; T4/T5/T6/T7/T8 quick gates passed with
-  6/12/19/26/37 tests; T9 phase boundary build + lint + 97 tests passed
-  (3 files, 0 failed/skipped). Every commit passed `check_commit.py`.
-- **API handoff**: `src/domain/triage.ts` exports `reduce`, `routeIncoming`,
+- **Gates**: T9 baseline 97 tests; T10 quick gate 109; T11 quick gate 116
+  plus targeted lint; T12 full build + lint + all 123 tests passed (6 files,
+  0 failed/skipped). All tests added test-first; no prior tests altered.
+  Each task message checked with `check_commit.py`. Editor test discovery
+  found no tests; configured Vitest CLI used.
+- **Core API**: `src/domain/triage.ts` exports `reduce`, `routeIncoming`,
   `selectImbox`, `selectFeed`, `selectScreener`, `selectPile`,
-  `selectFocusReply`, `normalizeState`. `src/data/seed.ts` exports `seed`
-  and fresh `buildSeedState()`. `SCHEMA_VERSION` and all models/actions/result
-  types are exported by `src/domain/types.ts`.
-- **Adapter contract**: `normalizeState(unknown)` returns
-  `{state, restoredSeed, diagnostics}`. Log malformed record diagnostics and
-  retain notice data for the banner; never silently discard diagnostics.
-  Missing storage key uses fresh seed without a corruption notice; JSON parse
-  and storage exceptions belong in T10. See README for full contract.
+  `selectFocusReply`, `normalizeState`; `buildSeedState()` returns fresh seed.
+- **Repository API**: `src/data/repository.ts`: `repository` singleton,
+  `createRepository(getStorage?)`, `MailRepository`, `RepositoryNotice`,
+  `STORAGE_KEY`. Methods: `load`, `save`, `reset`, `getNotices`, `subscribe`.
+  Load caches per instance. Every diagnostic is logged and retained.
+  Read failure seeds; later write failure keeps latest triage in memory.
+  Fallback is sticky. Never discard notices.
+- **UI handoff**: Mount `AppStoreProvider` once. `useAppState()` and
+  `useDispatch()` expose domain state/actions; dispatch `RESET_SEED` for reset.
+  `useAppNotices()` exposes live readonly notices, including failed save effects.
+  Notice union: core diagnostics; `seed-restored` / `invalid-json`;
+  `storage-unavailable` with `operation: load | save | reset`.
+  Render `notice.message` in T20's non-blocking banner. Notices persist through
+  save/reset. Exact messages: "Restored sample mailbox" and
+  "Changes won't be saved this session". README documents the full API.
+- **Sanitizer**: `src/lib/sanitize.ts` exports `sanitizeHtml(raw): string`.
+  T14/T19 must use it at every email-body render seam; never append raw HTML.
+  DOMPurify HTML-only profile preserves safe markup/remote images.
 - **Clarifications**: sender kinds accept arrays; personal wins.
   Pending mail has explicit `screener` box; P1 receipts use Imbox.
   Piles and Focus are newest-first. Finish removes a reply and marks it seen;
   remaining-queue cursor is zero. Explicit exit preserves the pile.
-  Design documents these deviations. Core imports no browser/React/storage APIs.
+  Core imports no browser/React/storage APIs. No new batch deviations.

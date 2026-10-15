@@ -150,6 +150,12 @@ No existing code to reuse — the project is empty. This design sets the convent
 - **Interfaces**: `sanitizeHtml(raw: string): string`.
 - **Dependencies**: `dompurify`.
 - **Reuses**: none.
+- **Execution clarification (T12)**: `DOMPurify.sanitize(raw,
+  { USE_PROFILES: { html: true } })` is the shared browser render seam.
+  Safe HTML, links, and remote images remain; executable links/handlers/scripts
+  and non-HTML namespaces do not. T14/T19 must use the helper before rendering,
+  without subsequently appending unsanitized markup. DOMPurify's official
+  README documents this import/profile and the post-sanitization mutation caveat.
 
 ### App Shell & Routing (`src/app/`)
 

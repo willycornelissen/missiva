@@ -630,14 +630,44 @@ interface and reset effect path documented in design/README. Banner is T20.
 
 **Done when**:
 
-- [ ] Scripts/event handlers stripped; safe markup preserved (spec edge case)
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests cover an XSS payload + safe markup; test count recorded (no silent deletions)
+- [x] Scripts/event handlers stripped; safe markup preserved (spec edge case)
+- [x] Gate check passes: `npm test`
+- [x] Unit tests cover an XSS payload + safe markup; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(lib): add html sanitizer for email bodies`
+
+**Execution evidence (T12)**: Tests written first; targeted RED confirmed missing
+sanitizer module. Added declared DOMPurify 3.4.17 dependency, then installed it.
+Mandatory phase-boundary `npm run build && npm run lint && npm test` passed:
+123 tests, 6 files, 0 failed/skipped (+7). ESLint and TypeScript clean.
+Prior 116 tests preserved without modification. DOMPurify's official README
+confirmed the default import, HTML-only profile, and no-post-sanitize-mutation
+contract. No UI render seam implemented in this batch.
+
+| Criterion (A) | Assertion evidence (`src/lib/sanitize.test.ts`) | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Scripts/event handlers and embedded unsafe content | `:9-11` `expect(sanitizeHtml(raw)).toBe('<p>Hello <strong>reader</strong></p><img src="https://images.example/photo.png">')` | Script/onclick/onerror/iframe removed, readable message and image retained | Yes |
+| Unsafe URL variants | `:19-20` `expect(sanitizeHtml(\`<p>Read <a href="${url}">the story</a></p>\`)).toBe('<p>Read <a>the story</a></p>')` | Literal/encoded javascript and executable data URL removed, label preserved | Yes |
+| Active non-HTML content | `:24-25` `expect(sanitizeHtml('<svg onload="alert(1)"><circle /></svg><p>Message</p>')).toBe('<p>Message</p>')` | Unsafe non-HTML content removed from body | Yes |
+| Safe markup and P1 remote images | `:33` `expect(sanitizeHtml(safe)).toBe(safe)` (exact fixture at `:29-32`) | Heading, paragraphs, emphasis, list, HTTPS link, table, image/alt retained | Yes |
+| Plain/empty bodies | `:37-38` `expect(sanitizeHtml('Hello there.\nSee you tomorrow.')).toBe('Hello there.\nSee you tomorrow.')`; `expect(sanitizeHtml('')).toBe('')` | Readable plain text and valid empty body preserved | Yes |
+
+| Assertions (C, same file) | Maps to | Keep |
+| --- | --- | --- |
+| `:9-11` exact safe output above | T12 script/handler removal, unsafe HTML edge | Yes |
+| `:19-20` exact link output above, three cases | Unsafe HTML edge | Yes |
+| `:24-25` exact safe paragraph above | Unsafe HTML edge, HTML render seam | Yes |
+| `:33` full safe fixture equality above | T12 safe markup, body/remote image assumption | Yes |
+| `:37-38` plain/empty equality above | Plain-text body assumption and valid empty bodies | Yes |
+
+Adequacy A-D passed: exact rendered payload assertions, every test mapped to
+body-safety/preservation requirements, no shallow or speculative tests;
+AD-004/co-location followed. HTML-only profile is a documented implementation
+choice, not a new feature. No spec deviation. T13-T20 and the final independent
+Verifier remain the orchestrator's next batch; no final validation claimed.
 
 ---
 
