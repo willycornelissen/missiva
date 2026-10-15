@@ -24,3 +24,11 @@ button:disabled { cursor: default; opacity: .6; }
 h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(32px, 4vw, 44px); font-weight: 400; letter-spacing: -1.7px; margin: 0 0 10px; }
 h2, h3, p { margin-top: 0; }
 ::selection { background: #e1d8ef; }
+@media (prefers-reduced-motion: no-preference) {
+  button, a { transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease; }
+  main > *, [data-mail-id], [data-sender-id] { animation: arrive 180ms ease-out; }
+  @keyframes arrive {
+    from { opacity: .4; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}

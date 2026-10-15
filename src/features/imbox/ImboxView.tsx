@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { selectImbox, selectScreener } from '../../domain/triage'
 import { useAppState, useDispatch } from '../../state/AppStore'
 import { EmailRow, EmptyState, MailReader, ViewHeader } from '../common'
+import { useMailShortcuts } from '../common/useShortcuts'
 import styles from './ImboxView.module.css'
 
 export function ImboxView() {
@@ -12,6 +13,7 @@ export function ImboxView() {
   const { newForYou, previouslySeen } = selectImbox(state)
   const pending = selectScreener(state).length
   const opened = openId ? state.emails[openId] : null
+  const selection = useMailShortcuts([...newForYou, ...previouslySeen], opened?.id, () => setOpenId(null))
   return <>
     <ViewHeader title="The Imbox" eyebrow="A LITTLE SPACE TO FOCUS" description="The important stuff. From the people you want to hear from." />
     {opened ? <MailReader email={opened} onClose={() => setOpenId(null)} /> : <>
@@ -24,7 +26,8 @@ export function ImboxView() {
           <h2><span aria-hidden="true">{id === 'new-mail' ? '✦' : '✓'}</span> {title}</h2><span>{emails.length}</span>
           <small>{id === 'new-mail' ? 'A few good things for you' : 'Already on your radar'}</small>
         </header>
-        <div className={styles.rows}>{emails.length ? emails.map((email) => <EmailRow key={email.id} email={email} sender={state.senders[email.senderId]} onOpen={() => {
+        <div className={styles.rows}>{emails.length ? emails.map((email) => <EmailRow key={email.id} email={email} sender={state.senders[email.senderId]}
+          selected={selection.selectedId === email.id} onSelect={() => selection.select(email.id)} onOpen={() => {
           dispatch({ type: 'OPEN_EMAIL', emailId: email.id }); setOpenId(email.id)
         }} />) : <EmptyState title={empty} message={hint} />}</div>
       </section>)}

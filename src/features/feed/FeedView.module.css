@@ -1,5 +1,6 @@
 .feed { display: flex; flex-direction: column; gap: 28px; max-width: 840px; margin: 0 auto; }
 .card { background: white; border: 1px solid var(--line); border-radius: 13px; padding: 30px; box-shadow: 0 3px 15px #29282204; }
+.card[data-selected="true"] { border-color: #b6a6cc; box-shadow: inset 3px 0 var(--purple); }
 .header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
 .header strong { font-size: 13px; }
 .header p { color: var(--muted); font-size: 11px; margin: 4px 0 0; overflow-wrap: anywhere; }

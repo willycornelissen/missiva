@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { selectFocusReply, selectPile } from '../../domain/triage'
 import { useAppState, useDispatch } from '../../state/AppStore'
 import { Avatar, EmailBody, EmailRow, EmptyState, MailReader, ViewHeader } from '../common'
+import { useMailShortcuts } from '../common/useShortcuts'
 import styles from '../common/Piles.module.css'
 
 export function ReplyLater() {
@@ -10,6 +11,7 @@ export function ReplyLater() {
   const emails = selectPile(state, 'replyLater')
   const [openId, setOpenId] = useState<string | null>(null)
   const opened = emails.find((email) => email.id === openId)
+  const selection = useMailShortcuts(emails, selectFocusReply(state)?.id ?? opened?.id, () => setOpenId(null))
   return <>
     <ViewHeader title="Reply Later" eyebrow="ON YOUR OWN TIME" count={emails.length}
       description="Good conversations deserve a little headspace. Come back when you're ready." />
@@ -18,6 +20,7 @@ export function ReplyLater() {
         <div className={styles.focusInvite}><div><h2>One conversation at a time.</h2><p>Settle in, clear your head, and work through your replies.</p></div>
           <button className={styles.primary} onClick={() => dispatch({ type: 'FOCUS_REPLY_START' })}>Focus &amp; Reply</button></div>
         <div className={styles.list}>{emails.map((email) => <EmailRow key={email.id} email={email} sender={state.senders[email.senderId]}
+          selected={selection.selectedId === email.id} onSelect={() => selection.select(email.id)}
           onOpen={() => { dispatch({ type: 'OPEN_EMAIL', emailId: email.id }); setOpenId(email.id) }} />)}</div>
       </> : <div className={styles.list}><EmptyState title="Nothing waiting on you" message="When a reply can wait, tuck it here. Your time is yours again." /></div>}
   </>

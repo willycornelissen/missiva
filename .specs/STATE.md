@@ -37,22 +37,32 @@
 ## Handoff
 
 - **Feature**: hey-mail-reader (`.specs/features/hey-mail-reader/`)
-- **Phase / Task**: Execute / batch 2 complete (T10-T12); T1-T12 complete
-- **Completed**: Core/seed plus storage repository, AppStore provider/hooks,
-  DOMPurify sanitizer. T10 `8d57d32`, T11 `4fb6400`, T12 in this atomic task
-  commit. Task-local exact assertion/traceability evidence is in `tasks.md`.
+- **Phase / Task**: Execute / batch 3 complete (T13-T20); T1-T20 implemented.
+  Independent feature verification pending.
+- **Completed**: Responsive five-route reader, sidebar, counted dock, safe
+  reader/previews/Feed, Imbox New/Seen, Screener, Reply Later/Focus, Set Aside
+  return, keyboard selection/actions, notices/reset, reduced motion, README.
+  T13 `edc019d`, T14 `10e98d7`, T15 `a478e41`, T16 `90eb41b`,
+  T17 `93254f0`, T18 `b7cbb79`, T19 `0dc5f83`; T20 in this atomic commit.
+  Exact per-task assertion/traceability evidence is in `tasks.md`.
 - **In-progress** (file:line): none
-- **Next step**: Execute approved batch 3 T13-T20, then independent verification.
-  No UI acceptance is claimed by adapter/core tests.
+- **Next step**: Orchestrator dispatches the mandatory independent Verifier
+  over T1-T20, including spec-anchored coverage and discrimination sensor.
+  This worker did not spawn nested agents or claim feature-level PASS.
 - **Blockers**: none
 - **Uncommitted files**: only pre-existing `.github/skills/` installation,
   intentionally outside task commits
 - **Branch**: master; local only, no push/deploy
-- **Gates**: T9 baseline 97 tests; T10 quick gate 109; T11 quick gate 116
-  plus targeted lint; T12 full build + lint + all 123 tests passed (6 files,
-  0 failed/skipped). All tests added test-first; no prior tests altered.
-  Each task message checked with `check_commit.py`. Editor test discovery
-  found no tests; configured Vitest CLI used.
+- **Gates**: T12 baseline 123; batch quick gates T13 125, T14 130, T15 133,
+  T16 137, T17 140, T18 144, T19 148. T20 full build + lint + all 161 tests
+  passed (15 files, zero failed/skipped). All 38 new tests written first;
+  no prior tests weakened, removed, or skipped. Every task message checked
+  with `check_commit.py`; `.github/skills/` never staged.
+- **Browser checks**: Real open/seen, screening, three-reply Focus progression,
+  Feed/pile return, keyboard, persistence/reload, schema notice/reset exercised.
+  All routes at 390px/1440px without horizontal page overflow; desktop/mobile
+  screenshots inspected. Reduced motion computed `none`/`0s` versus normal
+  `arrive`/`0.18s`. Helper server stopped and demo storage restored.
 - **Core API**: `src/domain/triage.ts` exports `reduce`, `routeIncoming`,
   `selectImbox`, `selectFeed`, `selectScreener`, `selectPile`,
   `selectFocusReply`, `normalizeState`; `buildSeedState()` returns fresh seed.
@@ -62,17 +72,20 @@
   Load caches per instance. Every diagnostic is logged and retained.
   Read failure seeds; later write failure keeps latest triage in memory.
   Fallback is sticky. Never discard notices.
-- **UI handoff**: Mount `AppStoreProvider` once. `useAppState()` and
+- **UI contract**: `AppShell` mounts `AppStoreProvider` once. `useAppState()` and
   `useDispatch()` expose domain state/actions; dispatch `RESET_SEED` for reset.
   `useAppNotices()` exposes live readonly notices, including failed save effects.
   Notice union: core diagnostics; `seed-restored` / `invalid-json`;
   `storage-unavailable` with `operation: load | save | reset`.
-  Render `notice.message` in T20's non-blocking banner. Notices persist through
+  `NoticeBanner` renders `notice.message` nonblockingly. Notices persist through
   save/reset. Exact messages: "Restored sample mailbox" and
   "Changes won't be saved this session". README documents the full API.
 - **Sanitizer**: `src/lib/sanitize.ts` exports `sanitizeHtml(raw): string`.
-  T14/T19 must use it at every email-body render seam; never append raw HTML.
-  DOMPurify HTML-only profile preserves safe markup/remote images.
+  Shared `EmailBody` uses it for reader, Screener, Focus, and Feed; no raw HTML
+  is appended. DOMPurify HTML-only profile preserves safe markup/remote images.
+- **Keyboard contract**: `j` selects first/next, `k` last/previous, bounded at
+  ends; `r/e` target selected or opened/focused message; `y/n` selected sender.
+  Editing, composition, repeat and modified key events are ignored.
 - **Clarifications**: sender kinds accept arrays; personal wins.
   Pending mail has explicit `screener` box; P1 receipts use Imbox.
   Piles and Focus are newest-first. Finish removes a reply and marks it seen;

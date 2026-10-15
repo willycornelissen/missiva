@@ -276,11 +276,12 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; all 23 P1 requirements mapped with core evidence;
-7 deferred P2/P3 requirements remain pending. UI/persistence and independent
-verification remain outstanding for P1.
+**Coverage:** 30 total; all 23 P1 requirements mapped with core, persistence,
+and UI evidence; 7 deferred P2/P3 requirements remain pending. Independent
+verification remains outstanding for P1.
 Task-local assertion evidence is recorded under each completed task in `tasks.md`;
-Implementing means core covered, not full UI acceptance or independent verification.
+Implementing now means implementation and per-task gates complete, with
+independent feature-level verification pending.
 
 **Execution progress:** T1 foundation verified with build/lint/test (0 tests).
 No user-facing acceptance criterion is complete yet.
@@ -326,6 +327,12 @@ and empty Set Aside (144 tests).
 T19 integrates FEED-01..04 with actual screening arrival, expanded ordered
 sanitized bodies, scroll preserving the complete mailbox state, empty Feed,
 and Feed/pile round-trip (148 tests). All five routes are implemented.
+T20 completes keyboard selection/triage on all routes (including opened/focused
+messages), editable-field guards, exact nonblocking restoration/storage notices,
+malformed-mail warning UI, and visible durable reset. Full build + lint +
+161 tests passed. Desktop/mobile browser flows and computed reduced-motion
+behavior passed. All 23 P1 requirements have task-local evidence; the
+orchestrator's independent Verifier must decide final Verified status.
 
 ---
 

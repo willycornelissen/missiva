@@ -1,5 +1,6 @@
 .cards { display: grid; gap: 20px; }
 .card { background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 26px; }
+.card[data-selected="true"] { border-color: #b6a6cc; box-shadow: inset 3px 0 var(--purple); }
 .sender { display: flex; align-items: center; gap: 13px; margin-bottom: 22px; }
 .sender h2 { font-size: 14px; margin: 0 0 4px; }
 .sender p { color: var(--muted); font-size: 12px; margin: 0; overflow-wrap: anywhere; }

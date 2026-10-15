@@ -1025,15 +1025,74 @@ No previous tests changed, no new spec deviations.
 
 **Done when**:
 
-- [ ] Shortcuts move selection and trigger triage actions
-- [ ] Transitions respect `prefers-reduced-motion`; banner shows seed-restore / no-persist notices
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests cover shortcut dispatch + banner; test count recorded (no silent deletions)
+- [x] Shortcuts move selection and trigger triage actions
+- [x] Transitions respect `prefers-reduced-motion`; banner shows seed-restore / no-persist notices
+- [x] Gate check passes: `npm test`
+- [x] Component tests cover shortcut dispatch + banner; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(ui): add keyboard shortcuts, reduced-motion, and notice banner`
+
+**Execution evidence (T20)**: Test-first run: 12 failed / 1 passed (the
+editable-field no-op already held before shortcuts existed). Targeted 13 tests
+then passed. Mandatory final `npm run build && npm run lint && npm test` passed:
+161 tests, 15 files, zero failed/skipped. Baseline 123 tests preserved; batch
+adds 38. TypeScript/ESLint/editor diagnostics clean. README now documents all
+routes, local-only completion, persistence/reset, keyboard rules, and deployment
+fallback. No new dependencies beyond T13's approved router.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| j/k selection, boundaries | `src/features/common/useShortcuts.test.tsx:13,15,17,19` `expect(screen.getByRole('article', { name: 'Subject newer' })).toHaveAttribute('data-selected', 'true')` and older equivalent | Correct first/next/previous selection, no out-of-range action | Yes |
+| r/e actions | `useShortcuts.test.tsx:21-26` `expect(screen.getByRole('link', { name: 'Reply Later, 1 email' })).toBeVisible()`; `expect(app.storedState().emails.newer.pile).toBe('replyLater')`; `expect(screen.getByRole('link', { name: 'Set Aside, 1 email' })).toBeVisible()`; `expect(app.storedState().emails.older.pile).toBe('setAside')`; `expect(screen.getByRole('heading', { name: "You're all caught up" })).toBeVisible()` | Exact selected messages move to counted piles | Yes |
+| Opened message action | `useShortcuts.test.tsx:34-36` `expect(screen.queryByTestId('email-body')).not.toBeInTheDocument()`; counted Set Aside link visible; `expect(app.storedState().emails.read).toEqual(message('read', { seen: true, pile: 'setAside' }))` | Only opened message targeted, returns to list | Yes |
+| y/n screening | `useShortcuts.test.tsx:46-53` `expect(screen.getByRole('link', { name: 'The Feed 1' })).toBeVisible()`; `expect(app.storedState().senders.club.decision).toBe('approved')`; `expect(app.storedState().emails.newsletter.box).toBe('feed')`; empty Screener heading visible; `expect(app.storedState().senders.noah.decision).toBe('rejected')`; `expect(app.storedState().emails.personal.box).toBe('screenedOut')`; `expect(screen.getByRole('link', { name: 'The Imbox 0' })).toBeVisible()` | Both exact sender decisions and destinations | Yes |
+| Every mail route | `useShortcuts.test.tsx:63-64` `expect(app.storedState().emails.target.pile).toBe(route === '/set-aside' ? 'replyLater' : 'setAside')`; `expect(within(screen.getByRole('main')).queryByRole('article')).not.toBeInTheDocument()` | Feed and both piles respond; source loses moved email | Yes |
+| Editable/modifier/composition guards | `useShortcuts.test.tsx:79-81` `expect(app.storedState()).toEqual(state)`; `expect(screen.getByRole('article', { name: 'Subject safe' })).toHaveAttribute('data-selected', 'false')`; `expect(screen.getByRole('link', { name: 'Set Aside, 0 emails' })).toBeVisible()` | No mutation or selection for input/textarea/select/nested editable, Ctrl/Meta/Alt/Shift/composition | Yes |
+| Empty paths and guide | `useShortcuts.test.tsx:88,90-91` `expect(app.storedState()).toEqual(mailbox())`; `expect(screen.getByText('Next / previous message')).toBeVisible()`; `expect(screen.getByText('Approve / reject sender')).toBeVisible()` | Empty views safe, guide accessible | Yes |
+| Focus pile conflict / final exit | `useShortcuts.test.tsx:102,104-106` `expect(screen.getByTestId('email-body')).toHaveTextContent('Message old')`; `expect(screen.getByRole('heading', { name: 'Nothing waiting on you' })).toBeVisible()`; `expect(app.storedState().focusReply).toEqual({ active: false, cursor: 0 })`; `expect(screen.getByRole('link', { name: 'Set Aside, 2 emails' })).toBeVisible()` | No skipped remaining item; no active empty Focus | Yes |
+| IMBOX-05 nonblocking notice | `src/features/common/NoticeBanner.test.tsx:18,21-22` `expect(within(screen.getByRole('status', { name: 'Mailbox notices' })).getByText('Restored sample mailbox')).toBeVisible()`; `expect(screen.getByRole('link', { name: 'Set Aside, 2 emails' })).toBeVisible()`; notice still visible | Exact prescribed text, triage remains usable | Yes |
+| Live storage failure/reset | `NoticeBanner.test.tsx:34,37-43` no initial notice; `expect(screen.getByRole('status', { name: 'Mailbox notices' })).toHaveTextContent("Changes won't be saved this session")`; reply-count link visible; `expect(repository.load().emails.keep.pile).toBe('replyLater')`; `expect(repository.load()).toEqual(buildSeedState())`; seed reply count 2 visible; exact warning remains | Failure observed after dispatch, latest memory state retained, reset works | Yes |
+| Malformed mail warning | `NoticeBanner.test.tsx:52-54` `expect(screen.getByRole('status', { name: 'Mailbox notices' })).toHaveTextContent('Skipped malformed email "bad"')`; `expect(screen.getByRole('article', { name: 'Subject good' })).toBeVisible()`; `expect(screen.queryByRole('article', { name: 'Subject bad' })).not.toBeInTheDocument()` | Bad skipped, warning visible, healthy usable | Yes |
+| Visible durable reset | `NoticeBanner.test.tsx:61-63` `expect(app.storedState()).toEqual(buildSeedState())`; `expect(screen.getByRole('link', { name: 'Set Aside, 1 email' })).toBeVisible()`; `expect(screen.getAllByRole('article')).toHaveLength(1)` | All seed fields restored and current route updated | Yes |
+| Reduced motion | `src/index.css:27-34` motion only inside `@media (prefers-reduced-motion: no-preference)`; browser computed `getComputedStyle(el).animationName` = `none` and duration `0s` under reduce, versus `arrive` / `0.18s` normally | No slide/fade animation for reduced-motion users | Yes (real browser) |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `useShortcuts.test.tsx:13,15,17,19` selected attributes above | Keyboard selection assumption/T20 | Yes |
+| `:21-26,34-36,63-64` exact pile/destination/reader state above | Keyboard actions, REPLY-01, ASIDE-01/04, conflict edge | Yes |
+| `:46-53` exact decisions/destinations above | Keyboard y/n, SCRN-02/03/05 | Yes |
+| `:79-81` unchanged full state/selection/count above | User's editable-field guard, T20 keyboard safety | Yes |
+| `:88,90-91` empty state and guide text above | Empty-view keyboard behavior and discoverability | Yes |
+| `:102,104-106` remaining body/empty/focus/count above | REPLY-03/05, conflict edge under shortcuts | Yes |
+| `NoticeBanner.test.tsx:18,21-22` notice and successful count change above | IMBOX-05 nonblocking notice | Yes |
+| `:34,37-43` notice/memory/reset values above | Storage-full edge, reset assumption | Yes |
+| `:52-54` warning/healthy/bad rows above | Malformed mail edge | Yes |
+| `:61-63` full seed/count/rows above | Reset-to-seed affordance | Yes |
+| Browser computed motion values at `index.css:27-34` | Reduced-motion assumption | Yes |
+
+Adequacy A-D passed: full state payloads, sender decisions and destination
+values, real user-visible counts and error text; no mock-only/shallow tests,
+all tests requirement-linked. AD-004/co-location followed. Selection defaults
+and guide wording are documented UI choices where the spec leaves detail open.
+All original tests remain unmodified and unskipped.
+
+**Real browser UI validation**: desktop screenshot inspected; mobile screenshot
+inspected at 390×844. All five routes checked at 390px and 1440px with
+`document.documentElement.scrollWidth <= innerWidth`; both dock tiles stayed
+inside mobile viewport. Exercised open→Seen, all three seeded/new Focus replies
+to empty, approve newsletter/reject personal, 12 expanded Feed cards, scroll
+without Imbox count change (6→6), Feed→Set Aside→Feed, keyboard j/r, reload
+persistence, unknown-schema banner and reset. No page errors in captured
+open/Focus flow; expected schema warning logged during fault check. One browser
+probe sampled a route during React's transition; rerunning with the destination
+heading awaited passed. Reduced motion checked with browser media emulation.
+Helper server stopped; demo storage restored. No deploy/push.
+
+**Delivery status**: T1-T20 implemented and committed locally. Independent
+Verifier is pending with the orchestrator; no feature-level PASS is claimed.
 
 ---
 

@@ -1,8 +1,9 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import type { MailRepository } from '../data/repository'
 import { selectFeed, selectImbox, selectPile, selectScreener } from '../domain/triage'
-import { AppStoreProvider, useAppState } from '../state/AppStore'
+import { AppStoreProvider, useAppState, useDispatch } from '../state/AppStore'
 import { PileDock } from '../features/common'
+import { NoticeBanner } from '../features/common/NoticeBanner'
 import { ImboxView } from '../features/imbox/ImboxView'
 import { ScreenerView } from '../features/screener/ScreenerView'
 import { ReplyLater } from '../features/reply-later/ReplyLater'
@@ -16,6 +17,7 @@ export function AppShell({ repository }: { repository?: MailRepository }) {
 
 function Layout() {
   const state = useAppState()
+  const dispatch = useDispatch()
   const navigation = [
     { path: '/imbox', title: 'The Imbox', icon: '✉', count: selectImbox(state).newForYou.length },
     { path: '/feed', title: 'The Feed', icon: '▤', count: selectFeed(state).length },
@@ -40,7 +42,18 @@ function Layout() {
       <footer className={styles.sidebarFooter}><span className={styles.online} /> Local demo · just for you</footer>
     </aside>
     <div className={styles.workspace}>
-      <header className={styles.topbar}><span>A fresh perspective on email</span><span className={styles.demoBadge}>DEMO MAILBOX</span></header>
+      <header className={styles.topbar}><span className={styles.tagline}>A fresh perspective on email</span><div className={styles.topbarActions}>
+        <details className={styles.shortcuts}><summary>Keyboard shortcuts</summary><dl>
+          <dt><kbd>j</kbd> <kbd>k</kbd></dt><dd>Next / previous message</dd>
+          <dt><kbd>r</kbd></dt><dd>Reply Later</dd>
+          <dt><kbd>e</kbd></dt><dd>Set Aside</dd>
+          <dt><kbd>y</kbd> <kbd>n</kbd></dt><dd>Approve / reject sender</dd>
+        </dl></details>
+        <button className={styles.reset} aria-label="Reset sample mailbox" title="Restore all 40 sample emails and clear your demo decisions"
+          onClick={() => dispatch({ type: 'RESET_SEED' })}>↻ Reset demo</button>
+        <span className={styles.demoBadge}>DEMO MAILBOX</span>
+      </div></header>
+      <NoticeBanner />
       <main id="mailbox" className={styles.main} tabIndex={-1}>
         <Routes>
           <Route path="/imbox" element={<ImboxView />} />

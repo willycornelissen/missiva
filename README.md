@@ -3,6 +3,51 @@
 A front-end mail-reader prototype using React, TypeScript, and Vite. Mail and
 triage are local demo data; no messages are sent.
 
+## Take a look around
+
+- **The Imbox** (`/imbox`): New for you sits above Previously seen. Open a row
+  to read it and mark it seen; use **Back to mail** to return.
+- **The Screener** (`/screener`): preview first-time senders, then choose Yes
+  or No. Approved newsletters go to The Feed; personal mail and receipts go
+  to Imbox. Rejections suppress all mail from that sender.
+- **Reply Later** (`/reply-later`): use a row's ↩ action or the reader toolbar,
+  then open the counted bottom tile. **Focus & Reply** shows one message at a
+  time, newest first. **Finish & next** marks it handled and seen, restores
+  its original box, and advances. Nothing is composed or sent. **Exit focus**
+  keeps the remaining pile.
+- **Set Aside** (`/set-aside`): use the ▱ action to keep a reference nearby.
+  Open the bottom tile to read or return messages to their original box.
+  Moving an email between piles always keeps only the latest assignment.
+- **The Feed** (`/feed`): newsletters are already open in one scrollable
+  column. Reading or scrolling does not clear Imbox counts.
+
+Use **Reset demo** in the top bar to restore all 40 sample emails and screening
+decisions. This overwrites only the local demo mailbox, not other browser data.
+Triage survives reloads when browser storage is available. A nonblocking
+notice explains seed restoration, skipped malformed mail, or storage failures;
+after a storage failure, current-session triage and reset still work in memory.
+
+### Keyboard and accessibility
+
+| Key | Action |
+| --- | --- |
+| `j` / `k` | Select next / previous message or screened sender |
+| `r` | Put selected/open message in Reply Later |
+| `e` | Put selected/open message in Set Aside |
+| `y` / `n` | Approve / reject selected screened sender |
+
+With no selection, `j` selects the first item and `k` the last. Selection stops
+at the ends; `Enter` opens a focused row button. In a reader or Focus & Reply,
+`r`/`e` target only the displayed message and `j`/`k` do not change it.
+Shortcuts ignore editable fields, composition, held/repeating keys, and
+Ctrl/Alt/Meta/Shift combinations. The top-bar guide is keyboard accessible.
+Navigation, actions, safe message links, and a skip-to-mail link also work
+with Tab. Motion is opt-in only when `prefers-reduced-motion: no-preference`.
+The responsive sidebar becomes horizontally scrollable navigation on phones;
+both counted piles remain docked and every view keeps space below its content.
+
+## Development
+
 Requires Node.js 24 and npm 11.
 
 ```sh
@@ -83,8 +128,8 @@ pure reducer, and saves on mount and every state change. Dispatch
 same effect. Views must not access storage or call repository reset directly.
 `useAppNotices()` subscribes to the repository's current notice snapshot,
 including startup repairs and failures arising during later save effects.
-The eventual non-blocking banner should render notice messages from this hook.
-Hooks require the provider. No banner or mail-reader UI is implemented here.
+The non-blocking `NoticeBanner` renders messages from this hook without
+discarding diagnostics. Hooks require the provider.
 
 ## Email body rendering
 
@@ -95,5 +140,11 @@ plain text, and inline remote images are retained (pixel blocking is not P1).
 Views must call this at every email HTML render seam and must not append raw
 markup after sanitizing. The helper needs a browser DOM (jsdom in tests).
 
-Mail-reader views and their sanitizer integration are implemented in T13-T20;
-the current app is still only the foundation shell.
+`EmailBody` is the single HTML-rendering seam used by the reader, screening
+preview, Focus & Reply, and Feed. UI uses CSS Modules with shared global
+tokens/base styles. Routes and store are composed in `src/app/AppShell.tsx`.
+The pure reducer remains the only authority for routing and triage rules.
+
+Deploying this SPA requires a host fallback from client routes to `index.html`.
+No service, external account, real send, Paper Trail, search, or backend is
+included in this P1 prototype.

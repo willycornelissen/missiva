@@ -24,16 +24,28 @@
 .workspace { margin-left: 252px; }
 .topbar { height: 75px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 44px; font-size: 12px; color: var(--muted); }
 .demoBadge { border: 1px solid var(--line); border-radius: 5px; padding: 5px 8px; font-size: 9px; letter-spacing: 1px; }
+.topbarActions { display: flex; align-items: center; gap: 16px; }
+.reset { border: 0; background: none; color: var(--muted); font-size: 11px; padding: 8px 0; }
+.reset:hover { color: var(--purple); }
+.shortcuts { position: relative; font-size: 11px; }
+.shortcuts summary { cursor: pointer; list-style: none; padding: 8px 0; }
+.shortcuts summary::before { content: '⌨ '; font-size: 15px; }
+.shortcuts dl { position: absolute; right: 0; top: 28px; z-index: 6; width: 285px; background: white; border: 1px solid var(--line); border-radius: 9px; box-shadow: 0 8px 30px #2221; padding: 18px; display: grid; grid-template-columns: 65px 1fr; gap: 14px 5px; }
+.shortcuts dd { margin: 0; color: var(--ink); }
+.shortcuts kbd { font-family: inherit; border: 1px solid var(--line); background: var(--canvas); padding: 3px 5px; border-radius: 3px; }
 .main { max-width: 1250px; padding: 38px 44px 175px; margin: auto; outline: none; }
 .skip { position: fixed; left: 12px; top: -70px; padding: 12px; background: white; z-index: 20; }
 .skip:focus { top: 12px; }
 @media (max-width: 1000px) {
+  .tagline { display: none; }
+  .topbarActions { width: 100%; justify-content: space-between; }
   .sidebar { width: 218px; padding-inline: 16px; }
   .workspace { margin-left: 218px; }
   .main { padding: 28px 24px 160px; }
   .topbar { padding-inline: 24px; }
 }
 @media (max-width: 700px) {
+  .shortcuts dl { left: 0; right: auto; }
   .sidebar { position: static; width: auto; padding: 18px 16px 10px; border-right: 0; border-bottom: 1px solid var(--line); }
   .brand { font-size: 24px; }
   .brandDot { margin-left: 0; }
