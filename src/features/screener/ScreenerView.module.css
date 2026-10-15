@@ -1,0 +1,27 @@
+.cards { display: grid; gap: 20px; }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 26px; }
+.sender { display: flex; align-items: center; gap: 13px; margin-bottom: 22px; }
+.sender h2 { font-size: 14px; margin: 0 0 4px; }
+.sender p { color: var(--muted); font-size: 12px; margin: 0; overflow-wrap: anywhere; }
+.newBadge { font-size: 9px; letter-spacing: 1px; margin-left: auto; color: #9a814a; background: #f7f0df; padding: 6px 9px; border-radius: 5px; white-space: nowrap; }
+.card h3 { font-family: Georgia, serif; font-size: 23px; font-weight: 400; margin-bottom: 10px; }
+.snippet { font-size: 13px; color: var(--muted); line-height: 1.7; }
+.preview { font-size: 12px; margin: 20px 0; }
+.preview summary { cursor: pointer; color: var(--purple); width: fit-content; }
+.preview[open] summary { margin-bottom: 20px; }
+.decisionBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 20px; border-top: 1px solid var(--line); }
+.decisionBar > span { font-size: 11px; color: var(--muted); }
+.decisionBar > div { display: flex; gap: 9px; }
+.yes, .no { padding: 10px 15px; border-radius: 7px; font-size: 12px; border: 1px solid #d7dece; color: #536a46; background: #e9efdf; }
+.no { border-color: var(--line); background: #faf9f6; color: var(--muted); }
+.yes:hover { background: #dce6cf; }
+.no:hover { background: #eee6e2; color: #8a6252; }
+.status { color: #60734f; font-size: 12px; }
+.status:empty { display: none; }
+@media (max-width: 700px) {
+  .card { padding: 20px 16px; }
+  .newBadge { display: none; }
+  .decisionBar { flex-wrap: wrap; }
+  .decisionBar > div { width: 100%; }
+  .yes, .no { flex: 1; }
+}

@@ -4,6 +4,7 @@ import { selectFeed, selectImbox, selectPile, selectScreener } from '../domain/t
 import { AppStoreProvider, useAppState } from '../state/AppStore'
 import { PileDock } from '../features/common'
 import { ImboxView } from '../features/imbox/ImboxView'
+import { ScreenerView } from '../features/screener/ScreenerView'
 import styles from './AppShell.module.css'
 
 export function AppShell({ repository }: { repository?: MailRepository }) {
@@ -40,7 +41,8 @@ function Layout() {
       <main id="mailbox" className={styles.main} tabIndex={-1}>
         <Routes>
           <Route path="/imbox" element={<ImboxView />} />
-          {navigation.filter(({ path }) => path !== '/imbox').map(({ path, title }) => <Route key={path} path={path} element={
+          <Route path="/screener" element={<ScreenerView />} />
+          {navigation.filter(({ path }) => !['/imbox', '/screener'].includes(path)).map(({ path, title }) => <Route key={path} path={path} element={
             <section><h1>{title}</h1><p>Your mail, thoughtfully organized.</p></section>
           } />)}
           <Route path="*" element={<Navigate to="/imbox" replace />} />

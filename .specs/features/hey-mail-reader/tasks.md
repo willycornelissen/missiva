@@ -826,15 +826,39 @@ dedicated states, not exact wording). No prior tests changed.
 
 **Done when**:
 
-- [ ] Approve/reject dispatch the correct actions and update boxes (SCRN-02, SCRN-03)
-- [ ] Empty screener shows a dedicated empty state (SCRN-05)
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests cover approve/reject + empty state; test count recorded (no silent deletions)
+- [x] Approve/reject dispatch the correct actions and update boxes (SCRN-02, SCRN-03)
+- [x] Empty screener shows a dedicated empty state (SCRN-05)
+- [x] Gate check passes: `npm test`
+- [x] Component tests cover approve/reject + empty state; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(screener): add screener view with yes/no decisions`
+
+**Execution evidence (T16)**: Four RED cases, then quick gate 137 passed,
+10 files, zero skipped/failed. Safe expandable previews and visible decision
+feedback accompany Yes/No controls.
+
+| Criterion (A) | Exact assertion (`src/features/screener/ScreenerView.test.tsx`) | Outcome | Covered |
+| --- | --- | --- | --- |
+| SCRN-01 sender/preview | `:15` `expect(within(card).getByText(state.senders[senderId].address)).toBeVisible()`; `:17` `expect(within(card).getByTestId('email-body')).toHaveTextContent('Message second')` | Pending sender and most recent message preview | Yes |
+| SCRN-02/04 both routing classes | `:19-23` `expect(screen.queryByRole('article', { name })).not.toBeInTheDocument()`; empty heading visible; `expect(screen.getByRole('link', { name: navLabel })).toBeVisible()`; `expect(app.storedState().senders[senderId].decision).toBe('approved')`; `expect(app.storedState().emails[id].box).toBe(destination)` | Both current messages routed to Imbox/Feed, decision persisted | Yes |
+| Remount remembers | `:27-28` `expect(screen.queryByRole('article', { name })).not.toBeInTheDocument()`; `expect(screen.getByRole('link', { name: navLabel })).toBeVisible()` | Sender not screened twice | Yes |
+| SCRN-03 | `:39-46` `expect(screen.queryByRole('article', { name: 'Noah de Vries' })).not.toBeInTheDocument()`; unrelated card visible; Imbox/Feed zero links visible; `expect(app.storedState().senders.noah.decision).toBe('rejected')`; `expect(app.storedState().emails.first.box).toBe('screenedOut')`; second equivalent; `expect(app.storedState().senders.club.decision).toBe('pending')` | Rejected sender fully suppressed; unrelated sender preserved | Yes |
+| SCRN-05 | `:51-53` `expect(screen.getByRole('heading', { name: "You're in good company" })).toBeVisible()`; `expect(screen.getByText('No new senders to screen. You decide who gets your attention.')).toBeVisible()`; `expect(screen.queryByRole('button', { name: /Yes, let them in/ })).not.toBeInTheDocument()` | Dedicated empty state, no stale controls | Yes |
+
+| Assertions (C, same file) | Maps to | Keep |
+| --- | --- | --- |
+| `:15,17` sender and body above | T16 pending senders / reader assumption | Yes |
+| `:19-23,27-28` removal/count/stored decisions/destinations above | SCRN-02/04 | Yes |
+| `:39-46` rejection payloads and unrelated pending sender above | SCRN-03 and sender-scoped decisions | Yes |
+| `:51-53` heading/message/no decisions above | SCRN-05 | Yes |
+
+Adequacy A-D passed: actual persisted decision/box values and UI counts, both
+destination classes and empty path; no mock-only tests; AD-004 followed.
+Future arrivals remain proven by `triage.test.ts:62-66,77-81` (T5 evidence),
+not simulated by inventing a receive UI. No previous tests changed.
 
 ---
 

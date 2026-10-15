@@ -314,6 +314,9 @@ controls exercise real store updates, including single-pile conflict behavior.
 T15 integrates IMBOX-01..04 and ASIDE-04/SCRN-01 isolation through the real
 route/store. Opening displays the body, persists seen, updates the count, and
 returns the row to Previously seen; both empty paths pass (133 tests).
+T16 integrates SCRN-01..05: pending sender previews, approve-to-Imbox/Feed,
+reject-all-current messages, remembered decision after remount, and empty
+Screener (137 tests). Future-mail behavior remains covered by the pure core.
 
 ---
 
