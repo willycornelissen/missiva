@@ -7,6 +7,7 @@ import { ImboxView } from '../features/imbox/ImboxView'
 import { ScreenerView } from '../features/screener/ScreenerView'
 import { ReplyLater } from '../features/reply-later/ReplyLater'
 import { SetAside } from '../features/set-aside/SetAside'
+import { FeedView } from '../features/feed/FeedView'
 import styles from './AppShell.module.css'
 
 export function AppShell({ repository }: { repository?: MailRepository }) {
@@ -46,9 +47,7 @@ function Layout() {
           <Route path="/screener" element={<ScreenerView />} />
           <Route path="/reply-later" element={<ReplyLater />} />
           <Route path="/set-aside" element={<SetAside />} />
-          {navigation.filter(({ path }) => path === '/feed').map(({ path, title }) => <Route key={path} path={path} element={
-            <section><h1>{title}</h1><p>Your mail, thoughtfully organized.</p></section>
-          } />)}
+          <Route path="/feed" element={<FeedView />} />
           <Route path="*" element={<Navigate to="/imbox" replace />} />
         </Routes>
       </main>

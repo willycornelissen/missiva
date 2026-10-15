@@ -975,14 +975,39 @@ already asserted here.
 
 **Done when**:
 
-- [ ] Items render expanded, newest first (FEED-02); empty feed shows empty state (FEED-04)
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests cover ordering + empty state; test count recorded (no silent deletions)
+- [x] Items render expanded, newest first (FEED-02); empty feed shows empty state (FEED-04)
+- [x] Gate check passes: `npm test`
+- [x] Component tests cover ordering + empty state; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(feed): add feed view`
+
+**Execution evidence (T19)**: Four RED cases, then quick gate 148 passed,
+13 files, zero skipped/failed. All five routes now have real views. Feed is one
+vertical flex column in the document scroll flow; safe body seam shared.
+
+| Criterion (A) | Exact assertion (`src/features/feed/FeedView.test.tsx`) | Outcome | Covered |
+| --- | --- | --- | --- |
+| FEED-02 and unsafe HTML | `:17` `expect(within(feed).getAllByRole('article').map((card) => card.getAttribute('aria-label'))).toEqual(['Subject new', 'Subject old'])`; `:18` `expect(within(feed).getAllByTestId('email-body').map((body) => body.innerHTML)).toEqual(['<h2>Fresh edition</h2><p>Full story</p>', '<p>Message old</p>'])` | Both expanded, newest first, exact sanitized markup | Yes |
+| FEED-03 | `:19-23` personal text absent; `expect(screen.getByRole('link', { name: 'The Imbox 1' })).toBeVisible()` before/after scroll; `expect(app.storedState()).toEqual(state)` | Scroll cannot clear Imbox or alter any state | Yes |
+| FEED-04/SCRN-01 | `:28-30` quiet heading visible; `expect(screen.getByText('Your favorite newsletters will unfold here. No rush to catch up.')).toBeVisible()`; `expect(screen.queryByRole('article')).not.toBeInTheDocument()` | Pending excluded, dedicated empty Feed | Yes |
+| FEED-01 | `:38-39` `expect(screen.getByTestId('email-body')).toHaveTextContent('Message club')`; `expect(screen.getByRole('link', { name: 'The Imbox 0' })).toBeVisible()` | Approved newsletter immediately available only in Feed | Yes |
+| Feed pile round-trip | `:46,50-52` quiet heading visible; restored body text Message reference; `expect(app.storedState().emails.reference).toEqual(newsletter('reference'))`; zero Set Aside link visible | Expanded Feed action/return retains full record | Yes |
+
+| Assertions (C, same file) | Maps to | Keep |
+| --- | --- | --- |
+| `:17-18` order and complete HTML above | FEED-02, unsafe HTML edge | Yes |
+| `:19-23` exclusion/counts/unchanged complete state above | FEED-03 | Yes |
+| `:28-30` empty message and absent cards above | FEED-04/SCRN-01 | Yes |
+| `:38-39` approved body and zero Imbox above | FEED-01/SCRN-02 | Yes |
+| `:46,50-52` empty/restored body/full payload/count above | ASIDE-01..03 with Feed origin | Yes |
+
+Adequacy A-D passed: complete HTML/state values, actual scroll and routing,
+all tests necessary; AD-004 followed. Single-column layout inspected in
+`FeedView.module.css:1`; actual responsive browser check is T20.
+No previous tests changed, no new spec deviations.
 
 ---
 

@@ -323,6 +323,9 @@ and explicit exit preserving the pile (140 tests). No send operation exists.
 T18 integrates ASIDE-01..04 and the conflict edge: counted expansion,
 safe reading, original Imbox/Feed restoration with seen state preserved,
 and empty Set Aside (144 tests).
+T19 integrates FEED-01..04 with actual screening arrival, expanded ordered
+sanitized bodies, scroll preserving the complete mailbox state, empty Feed,
+and Feed/pile round-trip (148 tests). All five routes are implemented.
 
 ---
 
