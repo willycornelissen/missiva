@@ -344,16 +344,43 @@ no shallow or unclaimed tests; AD-004/co-location followed. No existing tests ch
 
 **Done when**:
 
-- [ ] `REPLY_LATER` adds to the pile with a count (REPLY-01, REPLY-02)
-- [ ] Focus mode yields one email at a time in order and advances (REPLY-03, REPLY-04)
-- [ ] Emptying the pile exits focus mode (REPLY-05)
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests map 1:1 to REPLY-01..05; test count recorded (no silent deletions)
+- [x] `REPLY_LATER` adds to the pile with a count (REPLY-01, REPLY-02)
+- [x] Focus mode yields one email at a time in order and advances (REPLY-03, REPLY-04)
+- [x] Emptying the pile exits focus mode (REPLY-05)
+- [x] Gate check passes: `npm test`
+- [x] Unit tests map 1:1 to REPLY-01..05; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(triage): add reply-later pile and focus & reply flow`
+
+**Execution evidence (T7)**: `npm test`: 26 passed (+7), 0 skipped/failed.
+Design records newest-first queue, head cursor, seen completion, and explicit
+exit behavior. These resolve the spec's unspecified pile order/completion
+destination rather than claiming a more precise requirement existed.
+
+| Criterion (A) | Assertion evidence (`src/domain/triage.test.ts`) | Outcome |
+| --- | --- | --- |
+| REPLY-01/02 | `:190-193` `expect(selectPile(repeated, 'replyLater')).toEqual([email('reply', { pile: 'replyLater' })])`; length `1`; new group `[]`; source pile `null` | One counted item, immutable |
+| REPLY-03 | `:203-205` pile IDs equal `['new', 'old']`; `expect(selectFocusReply(next)).toEqual(state.emails.new)`; focus equals `{ active: true, cursor: 0 }` | Exactly one reply, ordered |
+| REPLY-04 | `:212-216` finished emails equal `email(id, {seen:true})`; next focus equals old email; remaining IDs `['old']` | Completes and advances without skipping |
+| REPLY-05 | `:217-228` pile `[]`; focus `{active:false,cursor:0}`; focused email `null`; empty NEXT equals original state | Last/initially empty exits |
+| Explicit exit (T7 action) | `:235-238` focus inactive; focused email `null`; pile equals original reply; inactive NEXT unchanged | Exit preserves work |
+| Screening isolation | `:244-246` `expect(next).toEqual(state)`; pile `[]`; focus `null` | Pending/rejected cannot bypass screening |
+
+| Assertions (C) | Requirement | Keep |
+| --- | --- | --- |
+| `triage.test.ts:190-193`, pile payload above | REPLY-01/02 | Yes |
+| `triage.test.ts:203-205`, focus payload above | REPLY-03 | Yes |
+| `triage.test.ts:212-220`, progression above | REPLY-04/05 and documented completion semantics | Yes |
+| `triage.test.ts:226-228`, empty flow above | REPLY-05 | Yes |
+| `triage.test.ts:235-238`, exit state above | T7 FOCUS_REPLY_EXIT | Yes |
+| `triage.test.ts:244-246`, blocked state above | SCRN-01/03 across new pile path | Yes |
+
+Adequacy A-D passed: non-shallow state and count assertions, every core flow
+and relevant isolation branch covered, all tests necessary; AD-004 followed.
+Counts/docked UI remain T14/T17.
 
 ---
 

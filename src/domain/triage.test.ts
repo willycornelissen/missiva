@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reduce, routeIncoming, selectFeed, selectImbox, selectScreener } from './triage'
+import { reduce, routeIncoming, selectFeed, selectFocusReply, selectImbox, selectPile, selectScreener } from './triage'
 import { SCHEMA_VERSION } from './types'
 import type { AppState, Email, Sender } from './types'
 
@@ -179,5 +179,70 @@ describe('Feed (FEED-01..04)', () => {
     const next = routeIncoming(approved, email('future-receipt'))
     expect(ids(selectImbox(next).newForYou)).toEqual(['future-receipt', 'receipt'])
     expect(selectFeed(next)).toEqual([])
+  })
+})
+
+describe('Reply Later and Focus (REPLY-01..05)', () => {
+  it('adds to the pile once, exposes a count, and keeps the source immutable', () => {
+    const state = mailbox([email('reply')])
+    const next = reduce(state, { type: 'REPLY_LATER', emailId: 'reply' })
+    const repeated = reduce(next, { type: 'REPLY_LATER', emailId: 'reply' })
+    expect(selectPile(repeated, 'replyLater')).toEqual([email('reply', { pile: 'replyLater' })])
+    expect(selectPile(repeated, 'replyLater')).toHaveLength(1)
+    expect(selectImbox(repeated).newForYou).toEqual([])
+    expect(state.emails.reply.pile).toBeNull()
+  })
+
+  it('focuses only Reply Later mail, newest first, one at a time', () => {
+    const state = mailbox([
+      email('old', { pile: 'replyLater' }), email('ordinary'),
+      email('new', { pile: 'replyLater', receivedAt: '2026-10-03T09:00:00.000Z' }),
+      email('reference', { pile: 'setAside' }),
+    ])
+    const next = reduce(state, { type: 'FOCUS_REPLY_START' })
+    expect(ids(selectPile(next, 'replyLater'))).toEqual(['new', 'old'])
+    expect(selectFocusReply(next)).toEqual(state.emails.new)
+    expect(next.focusReply).toEqual({ active: true, cursor: 0 })
+  })
+
+  it('finishes each email, advances without skipping, and exits after the last', () => {
+    const state = mailbox([email('old', { pile: 'replyLater' }), email('new', { pile: 'replyLater' })])
+    const started = reduce(state, { type: 'FOCUS_REPLY_START' })
+    const first = reduce(started, { type: 'FOCUS_REPLY_NEXT' })
+    expect(first.emails.new).toEqual(email('new', { seen: true }))
+    expect(selectFocusReply(first)).toEqual(state.emails.old)
+    expect(ids(selectPile(first, 'replyLater'))).toEqual(['old'])
+    const last = reduce(first, { type: 'FOCUS_REPLY_NEXT' })
+    expect(last.emails.old).toEqual(email('old', { seen: true }))
+    expect(selectPile(last, 'replyLater')).toEqual([])
+    expect(last.focusReply).toEqual({ active: false, cursor: 0 })
+    expect(selectFocusReply(last)).toBeNull()
+    expect(ids(selectImbox(last).previouslySeen)).toEqual(['new', 'old'])
+  })
+
+  it('cannot enter or advance focus when the pile is empty', () => {
+    const state = mailbox([email('ordinary')])
+    const started = reduce(state, { type: 'FOCUS_REPLY_START' })
+    expect(started.focusReply).toEqual({ active: false, cursor: 0 })
+    expect(selectFocusReply(started)).toBeNull()
+    expect(reduce(started, { type: 'FOCUS_REPLY_NEXT' })).toEqual(state)
+  })
+
+  it('explicit exit preserves remaining replies and stops presentation', () => {
+    const state = mailbox([email('reply', { pile: 'replyLater' })])
+    const started = reduce(state, { type: 'FOCUS_REPLY_START' })
+    const exited = reduce(started, { type: 'FOCUS_REPLY_EXIT' })
+    expect(exited.focusReply).toEqual({ active: false, cursor: 0 })
+    expect(selectFocusReply(exited)).toBeNull()
+    expect(selectPile(exited, 'replyLater')).toEqual([state.emails.reply])
+    expect(reduce(exited, { type: 'FOCUS_REPLY_NEXT' })).toEqual(exited)
+  })
+
+  it.each(['pending', 'rejected'] as const)('does not expose %s sender mail through a pile', (decision) => {
+    const state = mailbox([email('blocked')], [sender({ decision })])
+    const next = reduce(state, { type: 'REPLY_LATER', emailId: 'blocked' })
+    expect(next).toEqual(state)
+    expect(selectPile(next, 'replyLater')).toEqual([])
+    expect(selectFocusReply(reduce(next, { type: 'FOCUS_REPLY_START' }))).toBeNull()
   })
 })

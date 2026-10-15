@@ -1,4 +1,4 @@
-import type { AppState, BoxKind, Email, Sender, TriageAction } from './types'
+import type { AppState, BoxKind, Email, PileKind, Sender, TriageAction } from './types'
 
 function orderedEmails(state: AppState): Email[] {
   return [...state.order].reverse()
@@ -44,8 +44,50 @@ export function routeIncoming(state: AppState, email: Email): AppState {
   }
 }
 
+export function selectPile(state: AppState, pile: PileKind): Email[] {
+  return orderedEmails(state).filter((email) =>
+    state.senders[email.senderId]?.decision === 'approved' &&
+    (email.box === 'imbox' || email.box === 'feed') && email.pile === pile)
+}
+
+export function selectFocusReply(state: AppState): Email | null {
+  return state.focusReply.active ? selectPile(state, 'replyLater')[state.focusReply.cursor] ?? null : null
+}
+
+function replaceEmail(state: AppState, email: Email): AppState {
+  const next = { ...state, emails: { ...state.emails, [email.id]: email } }
+  return {
+    ...next,
+    focusReply: {
+      active: next.focusReply.active && selectPile(next, 'replyLater').length > 0,
+      cursor: 0,
+    },
+  }
+}
+
+function putInPile(state: AppState, emailId: string, pile: PileKind): AppState {
+  const email = state.emails[emailId]
+  if (!email || state.senders[email.senderId]?.decision !== 'approved' ||
+    (email.box !== 'imbox' && email.box !== 'feed')) return state
+  return replaceEmail(state, {
+    ...email, pile, originBox: email.pile === null ? email.box : email.originBox,
+  })
+}
+
 export function reduce(state: AppState, action: TriageAction): AppState {
   switch (action.type) {
+    case 'REPLY_LATER':
+      return putInPile(state, action.emailId, 'replyLater')
+    case 'FOCUS_REPLY_START':
+      return { ...state, focusReply: { active: selectPile(state, 'replyLater').length > 0, cursor: 0 } }
+    case 'FOCUS_REPLY_NEXT': {
+      if (!state.focusReply.active) return state
+      const email = selectFocusReply(state)
+      if (!email) return { ...state, focusReply: { active: false, cursor: 0 } }
+      return replaceEmail(state, { ...email, pile: null, seen: true, box: email.originBox })
+    }
+    case 'FOCUS_REPLY_EXIT':
+      return { ...state, focusReply: { active: false, cursor: 0 } }
     case 'SCREEN_DECIDE': {
       const sender = state.senders[action.senderId]
       if (!sender || sender.decision !== 'pending') return state

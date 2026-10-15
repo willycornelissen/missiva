@@ -172,6 +172,12 @@ No existing code to reuse — the project is empty. This design sets the convent
 - SPEC_DEVIATION: approved receipts use Imbox in P1. `paperTrail` remains a
   reserved type, not an implemented route. This avoids hiding demo receipts behind
   a deferred P2 UI and follows P1's approved-sender Imbox/newsletter Feed rule.
+- Focus & Reply processes remaining replies newest-first, matching the pile list.
+  Finishing clears `pile`, marks the email seen, and restores `originBox`.
+  SPEC_DEVIATION: cursor stays at `0` after a finished item is removed from the
+  queue, instead of incrementing into a shrinking list and skipping an email.
+  `selectFocusReply(state)` exposes exactly the active email or `null`.
+  Explicit exit leaves the remaining pile intact.
 
 ```typescript
 type SenderId = string
