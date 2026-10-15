@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reduce, routeIncoming, selectImbox, selectScreener } from './triage'
+import { reduce, routeIncoming, selectFeed, selectImbox, selectScreener } from './triage'
 import { SCHEMA_VERSION } from './types'
 import type { AppState, Email, Sender } from './types'
 
@@ -120,5 +120,64 @@ describe('Imbox (IMBOX-01..04)', () => {
       newForYou: [], previouslySeen: [email('read', { seen: true })],
     })
     expect(selectImbox(mailbox([]))).toEqual({ newForYou: [], previouslySeen: [] })
+  })
+})
+
+describe('Feed (FEED-01..04)', () => {
+  it('routes approved newsletters exclusively to Feed', () => {
+    const next = routeIncoming(mailbox([], [sender({ kind: 'newsletter' })]), email('letter'))
+    expect(next.emails.letter).toEqual(email('letter', { box: 'feed', originBox: 'feed' }))
+    expect(selectFeed(next)).toEqual([next.emails.letter])
+    expect(selectImbox(next)).toEqual({ newForYou: [], previouslySeen: [] })
+  })
+
+  it('returns full newsletter bodies newest first, not personal mail or piled mail', () => {
+    const state = mailbox([
+      email('new', { box: 'feed', receivedAt: '2026-10-03T09:00:00.000Z', bodyHtml: '<h2>Newest edition</h2><p>Full story</p>' }),
+      email('old', { box: 'feed' }),
+      email('personal', { senderId: 'personal' }),
+      email('piled', { box: 'feed', pile: 'setAside' }),
+    ], [sender({ kind: 'newsletter' }), sender({ id: 'personal' })])
+    expect(ids(selectFeed(state))).toEqual(['new', 'old'])
+    expect(selectFeed(state)[0].bodyHtml).toBe('<h2>Newest edition</h2><p>Full story</p>')
+  })
+
+  it('reading the Feed selector never clears Imbox unseen state', () => {
+    const state = mailbox([
+      email('letter', { box: 'feed' }), email('personal', { senderId: 'personal' }),
+    ], [sender({ kind: 'newsletter' }), sender({ id: 'personal' })])
+    const before = structuredClone(state)
+    selectFeed(state)
+    selectFeed(state)
+    expect(state).toEqual(before)
+    expect(selectImbox(state).newForYou).toEqual([email('personal', { senderId: 'personal' })])
+  })
+
+  it('returns an empty Feed for no mail and for unapproved newsletters', () => {
+    expect(selectFeed(mailbox([]))).toEqual([])
+    for (const decision of ['pending', 'rejected'] as const) {
+      const state = mailbox([email('letter', { box: 'feed' })], [sender({ kind: 'newsletter', decision })])
+      expect(selectFeed(state)).toEqual([])
+    }
+  })
+
+  it.each([
+    { kind: ['newsletter', 'personal'] as Sender['kind'] },
+    { kind: ['personal', 'newsletter'] as Sender['kind'] },
+  ])('defaults dual classification $kind to personal for current and future mail', ({ kind }) => {
+    const state = mailbox([email('first')], [sender({ kind, decision: 'pending' })])
+    const approved = reduce(state, { type: 'SCREEN_DECIDE', senderId: 'friend', decision: 'approved' })
+    const next = routeIncoming(approved, email('future'))
+    expect(ids(selectImbox(next).newForYou)).toEqual(['future', 'first'])
+    expect(selectFeed(next)).toEqual([])
+    expect(next.emails.future.box).toBe('imbox')
+  })
+
+  it('keeps approved receipts accessible in the P1 Imbox without a Paper Trail UI', () => {
+    const state = mailbox([email('receipt')], [sender({ kind: 'receipt', decision: 'pending' })])
+    const approved = reduce(state, { type: 'SCREEN_DECIDE', senderId: 'friend', decision: 'approved' })
+    const next = routeIncoming(approved, email('future-receipt'))
+    expect(ids(selectImbox(next).newForYou)).toEqual(['future-receipt', 'receipt'])
+    expect(selectFeed(next)).toEqual([])
   })
 })

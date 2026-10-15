@@ -291,16 +291,42 @@ commit; later additions shifted the open/flags/empty assertions to :106-122.
 
 **Done when**:
 
-- [ ] Approved newsletters route to Feed, not Imbox (FEED-01)
-- [ ] `selectFeed` returns items newest-first (FEED-02); scroll does not touch Imbox counters (FEED-03)
-- [ ] Empty-feed path covered (FEED-04)
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests map 1:1 to FEED-01..04; test count recorded (no silent deletions)
+- [x] Approved newsletters route to Feed, not Imbox (FEED-01)
+- [x] `selectFeed` returns items newest-first (FEED-02); scroll does not touch Imbox counters (FEED-03)
+- [x] Empty-feed path covered (FEED-04)
+- [x] Gate check passes: `npm test`
+- [x] Unit tests map 1:1 to FEED-01..04; test count recorded (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(triage): add feed routing and selector`
+
+**Execution evidence (T6)**: `npm test`: 19 passed (+7), 0 skipped/failed.
+Full body availability is the core's expanded semantics; actual expanded DOM
+and scroll handling remain T19. Dual classifications prioritize personal in
+either array order. Approved receipts follow the documented P1 Imbox default.
+
+| Criterion (A) | Assertion evidence (`src/domain/triage.test.ts`) | Outcome |
+| --- | --- | --- |
+| FEED-01 | `:129-131` `expect(next.emails.letter).toEqual(email('letter', { box: 'feed', originBox: 'feed' }))`; Feed equals `[next.emails.letter]`; Imbox groups empty | Newsletter exclusively Feed |
+| FEED-02 | `:141-142` `expect(ids(selectFeed(state))).toEqual(['new', 'old'])`; body equals `'<h2>Newest edition</h2><p>Full story</p>'` | Newest first, full bodies |
+| FEED-03 | `:152-153` `expect(state).toEqual(before)`; New group equals `[email('personal', { senderId: 'personal' })]` | Reading Feed does not clear Imbox unseen state |
+| FEED-04/SCRN-01 | `:157,160` `expect(selectFeed(...)).toEqual([])` | Empty and gated states |
+| Dual classification edge | `:171-173` Imbox IDs equal `['future', 'first']`; Feed equals `[]`; future box equals `'imbox'` | Personal wins both orders |
+| P1 receipts clarification | `:180-181` Imbox IDs equal `['future-receipt', 'receipt']`; Feed equals `[]` | No inaccessible P2-only mail |
+
+| Assertions (C) | Requirement | Keep |
+| --- | --- | --- |
+| `triage.test.ts:129-131`, routed payload above | FEED-01 | Yes |
+| `triage.test.ts:141-142`, IDs/body above | FEED-02 | Yes |
+| `triage.test.ts:152-153`, state above | FEED-03 | Yes |
+| `triage.test.ts:157,160`, empty lists above | FEED-04/SCRN-01 | Yes |
+| `triage.test.ts:171-173`, Imbox routing above | Dual-classification edge | Yes |
+| `triage.test.ts:180-181`, receipt placement above | Approved P1/P2 scope clarification | Yes |
+
+Adequacy A-D passed: exact routing, bodies, isolation, and listed edge asserted;
+no shallow or unclaimed tests; AD-004/co-location followed. No existing tests changed.
 
 ---
 

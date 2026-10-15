@@ -22,6 +22,11 @@ function destination(sender: Sender): BoxKind {
   return kinds.includes('newsletter') && !kinds.includes('personal') ? 'feed' : 'imbox'
 }
 
+export function selectFeed(state: AppState): Email[] {
+  return orderedEmails(state).filter((email) =>
+    state.senders[email.senderId]?.decision === 'approved' && email.box === 'feed' && email.pile === null)
+}
+
 export function selectScreener(state: AppState): Sender[] {
   const senderIds = [...new Set(orderedEmails(state).map((email) => email.senderId))]
   return senderIds.flatMap((id) => state.senders[id]?.decision === 'pending' ? [state.senders[id]] : [])

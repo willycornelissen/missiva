@@ -260,10 +260,10 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | ASIDE-02 | P1: Set Aside | Design | Pending |
 | ASIDE-03 | P1: Set Aside | Design | Pending |
 | ASIDE-04 | P1: Set Aside | Design | Pending |
-| FEED-01 | P1: The Feed | Design | Pending |
-| FEED-02 | P1: The Feed | Design | Pending |
-| FEED-03 | P1: The Feed | Design | Pending |
-| FEED-04 | P1: The Feed | Design | Pending |
+| FEED-01 | P1: The Feed | T5-T6 core / T19 UI | Implementing |
+| FEED-02 | P1: The Feed | T6 selector / T19 UI | Implementing |
+| FEED-03 | P1: The Feed | T6 isolation / T19 UI | Implementing |
+| FEED-04 | P1: The Feed | T6 selector / T19 UI | Implementing |
 | PAPER-01 | P2: Paper Trail | - | Pending |
 | PAPER-02 | P2: Paper Trail | - | Pending |
 | BNDL-01 | P2: Bundles | - | Pending |
@@ -276,7 +276,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; 9 mapped with core evidence, 21 awaiting implementation.
+**Coverage:** 30 total; 13 mapped with core evidence, 17 awaiting implementation.
 Task-local assertion evidence is recorded under each completed task in `tasks.md`;
 Implementing means core covered, not full UI acceptance or independent verification.
 
@@ -286,6 +286,7 @@ T2 models compile; the design records representations for pending mail and the
 dual-classification edge. P2 Paper Trail remains deferred.
 T3 supplies the bundled 40-email JSON and fresh `buildSeedState()` factory;
 seed completeness and demo coverage verified by 2 tests.
+T6 verifies the dual-classification edge: personal wins regardless of kind order.
 
 ---
 
