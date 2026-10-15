@@ -282,6 +282,8 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 No user-facing acceptance criterion is complete yet.
 T2 models compile; the design records representations for pending mail and the
 dual-classification edge. P2 Paper Trail remains deferred.
+T3 supplies the bundled 40-email JSON and fresh `buildSeedState()` factory;
+seed completeness and demo coverage verified by 2 tests.
 
 ---
 

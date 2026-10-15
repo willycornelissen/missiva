@@ -147,14 +147,32 @@ plural classifications, explicit screener box, and receipts' P1 Imbox default.
 
 **Done when**:
 
-- [ ] `seed` is a valid `AppState` with `schemaVersion`, senders, emails, order
-- [ ] Contains pending senders, newsletters, and receipts to exercise all P1 flows
-- [ ] No TypeScript errors (`npm run build`)
+- [x] `seed` is a valid `AppState` with `schemaVersion`, senders, emails, order
+- [x] Contains pending senders, newsletters, and receipts to exercise all P1 flows
+- [x] No TypeScript errors (`npm run build`)
 
 **Tests**: none
 **Gate**: build
 
 **Commit**: `feat(data): add bundled mock email seed`
+
+**Execution evidence (T3)**: Phase boundary build + lint + all tests passed:
+2 tests, 1 file, 0 skipped/failed. Optional seed tests strengthen the build-only
+minimum. All bodies are bundled static JSON; dates and IDs are deterministic.
+
+| Criterion (A) | Assertion evidence | Outcome |
+| --- | --- | --- |
+| Valid complete seed | `src/data/seed.test.ts:7-20`: `expect(seed.schemaVersion).toBe(SCHEMA_VERSION)`, `expect(Object.keys(seed.emails)).toHaveLength(40)`, `expect(seed.senders[email.senderId].id).toBe(email.senderId)`, field/date/seen/origin assertions | 40 complete, linked records |
+| Receive order | `src/data/seed.test.ts:22`: `expect(seed.order.map((id) => seed.emails[id].receivedAt)).toEqual(...sort())` | Oldest first |
+| Demo categories and states | `src/data/seed.test.ts:28-38`: kind set equals personal/newsletter/receipt; decision set equals pending/approved/rejected; seen and pile sets cover all variants; `expect(buildSeedState()).toEqual(seed)` | Every P1 flow has sample data |
+
+| Assertions (C) | Requirement | Keep |
+| --- | --- | --- |
+| `seed.test.ts:7-24` above | T3 valid AppState and bundled ~40-email assumption | Yes |
+| `seed.test.ts:28-38` above | T3 all-P1 demo fixtures and deterministic seed | Yes |
+
+Adequacy A-D: covered, state/value assertions rather than mocks, all tests
+necessary, AD-004/co-location followed. No tests changed, skipped, or deleted.
 
 ---
 
