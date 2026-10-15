@@ -84,14 +84,22 @@ T13 → T14 → T15 → T16 → T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] `npm run build` succeeds on the empty app
-- [ ] `npm test` runs (zero tests is OK) and `npm run lint` passes
-- [ ] Scripts `dev`, `build`, `lint`, `test` exist; Vitest configured with jsdom + RTL setup
+- [x] `npm run build` succeeds on the empty app
+- [x] `npm test` runs (zero tests is OK) and `npm run lint` passes
+- [x] Scripts `dev`, `build`, `lint`, `test` exist; Vitest configured with jsdom + RTL setup
 
 **Tests**: none
 **Gate**: build
 
 **Commit**: `chore(scaffold): init vite react-ts project with vitest and eslint`
+
+**Execution evidence (T1)**: Build + ESLint + Vitest passed (0 tests, explicitly
+allowed for foundation). `package.json` exports all four scripts;
+`vite.config.ts` selects jsdom and `src/test/setup.ts` installs jest-dom and RTL
+cleanup. Adequacy A/C: no test assertions required by the matrix; all three
+criteria covered by build/lint/test execution and configuration inspection.
+B: no placeholder tests. D: AD-004 followed. Template now ships Oxlint;
+replaced it with the explicitly requested ESLint. Generated demo assets removed.
 
 ---
 

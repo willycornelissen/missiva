@@ -278,6 +278,9 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Coverage:** 30 total, 0 mapped to tasks, 30 unmapped ⚠️ (mapping happens in Tasks).
 
+**Execution progress:** T1 foundation verified with build/lint/test (0 tests).
+No user-facing acceptance criterion is complete yet.
+
 ---
 
 ## Success Criteria
