@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 9,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "ac_gap::revalidate open readers against current mailbox eligibility after resetting triage state",
+      "text": "Revalidate open readers against current mailbox eligibility after resetting triage state.",
+      "signal": "ac_gap",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "hey-mail-reader"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/features/imbox/ImboxView.tsx:15 (ui)"
+      ],
+      "created": "2026-10-15T13:04:17Z",
+      "last_seen": "2026-10-15T13:04:17Z"
+    },
+    {
+      "id": "L-002",
+      "key": "ac_gap::validate bundled mail records and sender references before constructing seed state and surface skipped record diagnostics through the repository",
+      "text": "Validate bundled mail records and sender references before constructing seed state, and surface skipped-record diagnostics through the repository.",
+      "signal": "ac_gap",
+      "scope": "data",
+      "status": "candidate",
+      "features": [
+        "hey-mail-reader"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/data/seed.ts:22 (data)"
+      ],
+      "created": "2026-10-15T13:04:17Z",
+      "last_seen": "2026-10-15T13:04:17Z"
+    },
+    {
+      "id": "L-003",
+      "key": "spec_precision_gap::keep the focus and reply ordering contract explicit and shared with its pile selector",
+      "text": "Keep the Focus and Reply ordering contract explicit and shared with its pile selector.",
+      "signal": "spec_precision_gap",
+      "scope": "triage",
+      "status": "candidate",
+      "features": [
+        "hey-mail-reader"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        ".specs/features/hey-mail-reader/spec.md:107 (triage)"
+      ],
+      "created": "2026-10-15T13:04:17Z",
+      "last_seen": "2026-10-15T13:04:17Z"
+    },
+    {
+      "id": "L-004",
+      "key": "spec_deviation::represent all sender classifications and apply personal precedence before routing newsletters",
+      "text": "Represent all sender classifications and apply personal precedence before routing newsletters.",
+      "signal": "spec_deviation",
+      "scope": "domain",
+      "status": "candidate",
+      "features": [
+        "hey-mail-reader"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        ".specs/features/hey-mail-reader/design.md:194 (domain)"
+      ],
+      "created": "2026-10-15T13:04:17Z",
+      "last_seen": "2026-10-15T13:04:17Z"
+    },
+    {
+      "id": "L-005",
+      "key": "spec_deviation::model pending and rejected mail as distinct locations to preserve screening invariants",
+      "text": "Model pending and rejected mail as distinct locations to preserve screening invariants.",
+      "signal": "spec_deviation",
+      "scope": "domain",
+      "status": "candidate",
+      "features": [
+        "hey-mail-reader"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        ".specs/features/hey-mail-reader/design.md:197 (domain)"
+      ],
+      "created": "2026-10-15T13:04:17Z",
+      "last_seen": "2026-10-15T13:04:17Z"
+    },
+    {
+      "id": "L-006",
+      "key": "spec_deviation::route approved receipt mail to an accessible p1 box while paper trail is deferred",
+      "text": "Route approved receipt mail to an accessible P1 box while Paper Trail is deferred.",
+      "signal": "spec_deviation",
+      "scope": "triage",
+      "status": "candidate",
+      "features": [
+        "hey-mail-reader"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        ".specs/features/hey-mail-reader/design.md:199 (triage)"
+      ],
+      "created": "2026-10-15T13:04:18Z",
+      "last_seen": "2026-10-15T13:04:18Z"
+    },
+    {
+      "id": "L-007",
+      "key": "spec_deviation::keep the active index at the head when completing a reply removes it from the remaining queue",
+      "text": "Keep the active index at the head when completing a reply removes it from the remaining queue.",
+      "signal": "spec_deviation",
+      "scope": "triage",
+      "status": "candidate",
+      "features": [
+        "hey-mail-reader"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        ".specs/features/hey-mail-reader/design.md:204 (triage)"
+      ],
+      "created": "2026-10-15T13:04:18Z",
+      "last_seen": "2026-10-15T13:04:18Z"
+    },
+    {
+      "id": "L-008",
+      "key": "spec_deviation::return structured diagnostics from pure mailbox normalization and log and display them in adapters",
+      "text": "Return structured diagnostics from pure mailbox normalization and log and display them in adapters.",
+      "signal": "spec_deviation",
+      "scope": "data",
+      "status": "candidate",
+      "features": [
+        "hey-mail-reader"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        ".specs/features/hey-mail-reader/design.md:211 (data)"
+      ],
+      "created": "2026-10-15T13:04:18Z",
+      "last_seen": "2026-10-15T13:04:18Z"
+    }
+  ]
+}

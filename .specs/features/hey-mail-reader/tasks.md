@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/hey-mail-reader/design.md`
-**Status**: Approved for Execute
+**Status**: Complete - T1-T20 plus approved repairs T21-T23; independent verification PASS (192 tests, 3/3 mutations killed); all five P1 manual workflows approved by the user. Evidence: `validation.md`.
 
 ---
 

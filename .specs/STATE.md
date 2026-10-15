@@ -37,9 +37,8 @@
 ## Handoff
 
 - **Feature**: hey-mail-reader (`.specs/features/hey-mail-reader/`)
-- **Phase / Task**: Approved repair round 1 of 3 complete (T21-T23, F1/F2/F3).
-  T1-T20 remain complete. Independent re-verification pending; no feature-level
-  PASS or Verified status claimed.
+- **Phase / Task**: Execute complete. T1-T23 committed; independent
+  re-verification PASS; all five P1 manual workflows approved by the user.
 - **Completed**: T21 `edda10e` resolves Imbox reader eligibility through the
   current selector. Approve → open → reset restores persisted seed, removes
   pending mail from the reader, and returns the sender to Screener; ordinary
@@ -47,19 +46,16 @@
   T22 `613b0c2` validates raw bundled messages before sender dereference,
   skips invalid/missing fields and unknown senders, preserves source-index IDs,
   and logs/publishes diagnostics on first load, fallback and reset.
-  T23 (this commit) carries the user's explicit most-recent-first choice into
+  T23 `f4e2a03` carries the user's explicit most-recent-first choice into
   REPLY-03 without changing behavior. Exact adequacy tables, gates, dependencies
   and traceability are appended in `tasks.md` and recorded in `spec.md`.
 - **In-progress** (file:line): none
-- **Next step**: Orchestrator dispatches a fresh independent Verifier over the
-  repaired feature, including F1/F2 regressions, REPLY-03 precision,
-  spec-anchored coverage and discrimination sensor. Existing `validation.md`
-  remains FAIL from pre-repair HEAD `0576807`; only the Verifier updates it.
-  This worker stops after repairs, with no nested agents.
+- **Next step**: No pending P1 implementation. Await a new user request;
+  P2/P3 remain deferred. Run `npm run dev` to use the local prototype.
 - **Blockers**: none
-- **Uncommitted files**: pre-existing `.github/` (skill installation),
-  `.specs/features/hey-mail-reader/validation.md`, `.specs/lessons.json`,
-  `.specs/LESSONS.md`; deliberately not modified or staged by this worker.
+- **Uncommitted files**: pre-existing `.github/` skill installation remains
+  intentionally outside implementation commits. Verification, lessons and
+  closure status are included in the closing documentation commit.
 - **Branch**: master; local only, no push/deploy
 - **Gates**: T21 targeted 8, full 162; T22 targeted 111, full 192;
   T23 targeted 38, final build + lint + all 192 tests passed (17 files,
@@ -79,6 +75,10 @@
   state through pure internal `RESTORE_SEED`. The normal save effect also sees
   restored state. Repository logs and publishes every seed skip; notices stay
   nonblocking through `useAppNotices`. Other triage behavior is unchanged.
-- **Validation scope**: Real-shell RTL tests use actual routes, store and
-  repository with serialized storage; no new interactive/browser UAT claimed.
-  No helpers remain running and no dependency installation was needed.
+- **Validation scope**: Independent report covers `2a7fdae..f4e2a03`,
+  23/23 P1 ACs and 5/5 edges. Build/lint and 192 tests passed without skips.
+  Three scratch mutations (stale reader, suppressed seed diagnostics, reversed
+  Focus order) were killed; scratch removed and real porcelain preserved.
+  `validate_state.py` passed. User subsequently approved Imbox, Screener,
+  Reply Later/Focus, Set Aside and Feed manual tests. Visual resemblance was
+  not separately evaluated. No assistant-owned helpers remain running.

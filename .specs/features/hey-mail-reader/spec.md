@@ -241,29 +241,29 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| IMBOX-01 | P1: The Imbox | T4 core / T15 UI | Implementing |
-| IMBOX-02 | P1: The Imbox | T4 core / T15 UI | Implementing |
-| IMBOX-03 | P1: The Imbox | T4 core / T14-T15 UI | Implementing |
-| IMBOX-04 | P1: The Imbox | T4 selector / T15 UI | Implementing |
-| IMBOX-05 | P1: The Imbox | T9-T11 guard/repository/store complete / T20 notice / T22 seed fallback repair complete | Implementing |
-| SCRN-01 | P1: The Screener | T5 core / T16 UI / T21 reset-reader repair complete | Implementing |
-| SCRN-02 | P1: The Screener | T5 core / T16 UI | Implementing |
-| SCRN-03 | P1: The Screener | T5 core / T16 UI | Implementing |
-| SCRN-04 | P1: The Screener | T5 state + T10-T11 persistence/wiring complete | Implementing |
-| SCRN-05 | P1: The Screener | T5 selector / T16 UI | Implementing |
-| REPLY-01 | P1: Reply Later + Focus & Reply | T7 core / T14-T17 UI | Implementing |
-| REPLY-02 | P1: Reply Later + Focus & Reply | T7 count / T14-T17 UI | Implementing |
-| REPLY-03 | P1: Reply Later + Focus & Reply | T7 core / T17 UI / T23 newest-first precision repair complete | Implementing |
-| REPLY-04 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Implementing |
-| REPLY-05 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Implementing |
-| ASIDE-01 | P1: Set Aside | T8 core / T14-T18 UI | Implementing |
-| ASIDE-02 | P1: Set Aside | T8 count / T14-T18 UI | Implementing |
-| ASIDE-03 | P1: Set Aside | T8 core / T18 UI | Implementing |
-| ASIDE-04 | P1: Set Aside | T8 isolation / T15 UI | Implementing |
-| FEED-01 | P1: The Feed | T5-T6 core / T19 UI | Implementing |
-| FEED-02 | P1: The Feed | T6 selector / T19 UI | Implementing |
-| FEED-03 | P1: The Feed | T6 isolation / T19 UI | Implementing |
-| FEED-04 | P1: The Feed | T6 selector / T19 UI | Implementing |
+| IMBOX-01 | P1: The Imbox | T4 core / T15 UI | Verified |
+| IMBOX-02 | P1: The Imbox | T4 core / T15 UI | Verified |
+| IMBOX-03 | P1: The Imbox | T4 core / T14-T15 UI | Verified |
+| IMBOX-04 | P1: The Imbox | T4 selector / T15 UI | Verified |
+| IMBOX-05 | P1: The Imbox | T9-T11 guard/repository/store complete / T20 notice / T22 seed fallback repair complete | Verified |
+| SCRN-01 | P1: The Screener | T5 core / T16 UI / T21 reset-reader repair complete | Verified |
+| SCRN-02 | P1: The Screener | T5 core / T16 UI | Verified |
+| SCRN-03 | P1: The Screener | T5 core / T16 UI | Verified |
+| SCRN-04 | P1: The Screener | T5 state + T10-T11 persistence/wiring complete | Verified |
+| SCRN-05 | P1: The Screener | T5 selector / T16 UI | Verified |
+| REPLY-01 | P1: Reply Later + Focus & Reply | T7 core / T14-T17 UI | Verified |
+| REPLY-02 | P1: Reply Later + Focus & Reply | T7 count / T14-T17 UI | Verified |
+| REPLY-03 | P1: Reply Later + Focus & Reply | T7 core / T17 UI / T23 newest-first precision repair complete | Verified |
+| REPLY-04 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Verified |
+| REPLY-05 | P1: Reply Later + Focus & Reply | T7 core / T17 UI | Verified |
+| ASIDE-01 | P1: Set Aside | T8 core / T14-T18 UI | Verified |
+| ASIDE-02 | P1: Set Aside | T8 count / T14-T18 UI | Verified |
+| ASIDE-03 | P1: Set Aside | T8 core / T18 UI | Verified |
+| ASIDE-04 | P1: Set Aside | T8 isolation / T15 UI | Verified |
+| FEED-01 | P1: The Feed | T5-T6 core / T19 UI | Verified |
+| FEED-02 | P1: The Feed | T6 selector / T19 UI | Verified |
+| FEED-03 | P1: The Feed | T6 isolation / T19 UI | Verified |
+| FEED-04 | P1: The Feed | T6 selector / T19 UI | Verified |
 | PAPER-01 | P2: Paper Trail | - | Pending |
 | PAPER-02 | P2: Paper Trail | - | Pending |
 | BNDL-01 | P2: Bundles | - | Pending |
@@ -276,14 +276,16 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; all 23 P1 requirements mapped with core, persistence,
-and UI evidence; 7 deferred P2/P3 requirements remain pending. Independent
-verification remains outstanding for P1.
-Task-local assertion evidence is recorded under each completed task in `tasks.md`;
-Implementing now means implementation and per-task gates complete, with
-independent feature-level verification pending.
+**Coverage:** 30 total; all 23 P1 requirements independently Verified with core,
+persistence and UI evidence; 7 deferred P2/P3 requirements remain pending.
+See `validation.md`: build/lint and 192 tests pass; 3/3 mutations killed.
+The user approved all five P1 manual workflows. Subjective visual resemblance
+was not separately evaluated. Task-local evidence remains in `tasks.md`.
 
-**Execution progress:** T1 foundation verified with build/lint/test (0 tests).
+**Execution history:** The entries below preserve each task's result at its
+commit; references to pending work are historical, superseded by the final
+verification above.
+T1 foundation verified with build/lint/test (0 tests).
 No user-facing acceptance criterion is complete yet.
 T2 models compile; the design records representations for pending mail and the
 dual-classification edge. P2 Paper Trail remains deferred.
