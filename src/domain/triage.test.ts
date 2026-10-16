@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reduce, routeIncoming, selectFeed, selectFocusReply, selectImbox, selectPaperTrail, selectPile, selectScreener } from './triage'
+import { reduce, routeIncoming, selectDisplayEntries, selectFeed, selectFocusReply, selectImbox, selectPaperTrail, selectPile, selectScreener } from './triage'
 import { SCHEMA_VERSION } from './types'
 import type { AppState, Email, Sender } from './types'
 
@@ -347,4 +347,40 @@ describe('Paper Trail (PAPER-01..02)', () => {
     expect(selectPaperTrail(state, 'nonexistent')).toEqual([])
   })
 })
+
+describe('Sender Bundles (BNDL-01..02)', () => {
+  it('toggles sender bundling immutably and ignores unknown senders', () => {
+    const state = mailbox([email('one')])
+    const bundled = reduce(state, { type: 'SET_BUNDLE', senderId: 'friend', bundled: true })
+    expect(bundled.senders.friend.bundled).toBe(true)
+    expect(state.senders.friend.bundled).toBeUndefined()
+    expect(reduce(state, { type: 'SET_BUNDLE', senderId: 'unknown', bundled: true })).toBe(state)
+    const unbundled = reduce(bundled, { type: 'SET_BUNDLE', senderId: 'friend', bundled: false })
+    expect(unbundled.senders.friend.bundled).toBe(false)
+  })
+
+  it('collapses bundled sender emails into one bundle entry at the newest position and expands back when unbundled', () => {
+    const rail = sender({ id: 'rail', name: 'North Rail', kind: 'receipt' })
+    const bookshop = sender({ id: 'bookshop', name: 'Corner Bookshop', kind: 'receipt' })
+    const e1 = email('rail-old', { senderId: 'rail', box: 'paperTrail', originBox: 'paperTrail', receivedAt: '2026-10-01T09:00:00.000Z' })
+    const e2 = email('book-mid', { senderId: 'bookshop', box: 'paperTrail', originBox: 'paperTrail', receivedAt: '2026-10-02T09:00:00.000Z' })
+    const e3 = email('rail-new', { senderId: 'rail', box: 'paperTrail', originBox: 'paperTrail', receivedAt: '2026-10-03T09:00:00.000Z' })
+    const state = mailbox([e1, e2, e3], [rail, bookshop])
+
+    const bundled = reduce(state, { type: 'SET_BUNDLE', senderId: 'rail', bundled: true })
+    const entries = selectDisplayEntries(bundled, selectPaperTrail(bundled))
+    expect(entries).toEqual([
+      { kind: 'bundle', sender: { ...rail, bundled: true }, emails: [e3, e1], latest: e3 },
+      { kind: 'email', email: e2, sender: bookshop },
+    ])
+
+    const unbundled = reduce(bundled, { type: 'SET_BUNDLE', senderId: 'rail', bundled: false })
+    expect(selectDisplayEntries(unbundled, selectPaperTrail(unbundled))).toEqual([
+      { kind: 'email', email: e3, sender: { ...rail, bundled: false } },
+      { kind: 'email', email: e2, sender: bookshop },
+      { kind: 'email', email: e1, sender: { ...rail, bundled: false } },
+    ])
+  })
+})
+
 

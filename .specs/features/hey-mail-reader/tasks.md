@@ -1471,18 +1471,32 @@ Adequacy A-D passed: exact state/payload assertions, all tests mapped to `PAPER-
 
 **Done when**:
 
-- [ ] `SET_BUNDLE` updates `sender.bundled` immutably (`BNDL-01`)
-- [ ] `selectDisplayEntries(state, emails)` collapses each bundled sender's emails in a slice into one `bundle` entry positioned at its newest email, with `emails` ordered newest-first (`BNDL-01`, `BNDL-02`)
-- [ ] `normalizeState()` preserves boolean `sender.bundled` and rejects non-boolean `bundled` values as malformed senders
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests in `src/domain/triage.test.ts` and `src/domain/normalize.test.ts` cover `BNDL-01`, `BNDL-02`, and `bundled` normalization
+- [x] `SET_BUNDLE` updates `sender.bundled` immutably (`BNDL-01`)
+- [x] `selectDisplayEntries(state, emails)` collapses each bundled sender's emails in a slice into one `bundle` entry positioned at its newest email, with `emails` ordered newest-first (`BNDL-01`, `BNDL-02`)
+- [x] `normalizeState()` preserves boolean `sender.bundled` and rejects non-boolean `bundled` values as malformed senders
+- [x] Gate check passes: `npm test`
+- [x] Unit tests in `src/domain/triage.test.ts` and `src/domain/normalize.test.ts` cover `BNDL-01`, `BNDL-02`, and `bundled` normalization
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(triage): add sender bundling reducer and display entry selector`
 
+**Execution evidence (T26)**: RED (3 failing assertions across `triage.test.ts` and `normalize.test.ts`), then `npx vitest run src/domain/triage.test.ts src/domain/normalize.test.ts`: 105 passed, 0 failed.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| `SET_BUNDLE` immutability (`BNDL-01`) | `src/domain/triage.test.ts:355-359` `expect(bundled.senders.friend.bundled).toBe(true)`; `expect(state.senders.friend.bundled).toBeUndefined()`; `expect(unbundled.senders.friend.bundled).toBe(false)` | Toggles sender bundling immutably and ignores unknown senders | Yes |
+| `selectDisplayEntries` collapse & newest-first order (`BNDL-01`, `BNDL-02`) | `src/domain/triage.test.ts:372-383` `expect(entries).toEqual([{ kind: 'bundle', sender: { ...rail, bundled: true }, emails: [e3, e1], latest: e3 }, { kind: 'email', email: e2, sender: bookshop }])` | Collapses bundled sender emails into one entry at newest position with newest-first inner emails | Yes |
+| `normalizeState` bundle validation | `src/domain/normalize.test.ts:31-37` preserves `SET_BUNDLE`; `src/domain/normalize.test.ts:101-114` rejects `{ bundled: 'true' }` with `malformed-sender` | Boolean `bundled` preserved; non-boolean rejected | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `triage.test.ts:352-384` | `BNDL-01`, `BNDL-02` core | Yes |
+| `normalize.test.ts:31,101` | `BNDL-01` persistence guard | Yes |
+
 ---
+
 
 ### T27: Build Paper Trail view and wire `/paper-trail` route
 

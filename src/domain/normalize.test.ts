@@ -28,6 +28,7 @@ describe('schema guard (IMBOX-05)', () => {
   it('preserves valid decisions, seen flags, piles, order, and active Focus', () => {
     let state = buildSeedState()
     state = reduce(state, { type: 'SCREEN_DECIDE', senderId: 'noah', decision: 'approved' })
+    state = reduce(state, { type: 'SET_BUNDLE', senderId: 'rail', bundled: true })
     state = reduce(state, { type: 'OPEN_EMAIL', emailId: 'mail-31' })
     state = reduce(state, { type: 'SET_ASIDE', emailId: 'mail-25' })
     state = reduce(state, { type: 'FOCUS_REPLY_START' })
@@ -99,7 +100,7 @@ describe('malformed email edge', () => {
   it.each([
     { id: undefined }, { name: undefined }, { address: undefined }, { kind: undefined },
     { decision: undefined }, { id: 'other' }, { name: null }, { address: '' },
-    { kind: [] }, { kind: ['newsletter', 'invalid'] }, { decision: 'invalid' },
+    { kind: [] }, { kind: ['newsletter', 'invalid'] }, { decision: 'invalid' }, { bundled: 'true' },
   ])('skips invalid senders and their orphaned mail with diagnostics (%#)', (fields) => {
     const state = buildSeedState()
     const result = normalizeState({

@@ -1,6 +1,6 @@
 import { buildSeed, buildSeedState } from '../data/seed'
 import { SCHEMA_VERSION } from './types'
-import type { AppState, BoxKind, Email, NormalizationDiagnostic, NormalizationResult, PileKind, Sender, TriageAction } from './types'
+import type { AppState, BoxKind, DisplayEntry, Email, NormalizationDiagnostic, NormalizationResult, PileKind, Sender, TriageAction } from './types'
 import { isRecord, nonempty, validEmailContent } from './validation'
 
 function orderedEmails(state: AppState): Email[] {
@@ -40,6 +40,24 @@ export function selectPaperTrail(state: AppState, query = ''): Email[] {
     if (!needle) return true
     return [sender.name, sender.address, email.subject].some((field) => field.toLowerCase().includes(needle))
   })
+}
+
+export function selectDisplayEntries(state: AppState, emails: Email[]): DisplayEntry[] {
+  const seenBundles = new Set<string>()
+  const entries: DisplayEntry[] = []
+  for (const email of emails) {
+    const sender = state.senders[email.senderId]
+    if (!sender) continue
+    if (!sender.bundled) {
+      entries.push({ kind: 'email', email, sender })
+      continue
+    }
+    if (seenBundles.has(sender.id)) continue
+    seenBundles.add(sender.id)
+    const bundledEmails = emails.filter((item) => item.senderId === sender.id)
+    entries.push({ kind: 'bundle', sender, emails: bundledEmails, latest: bundledEmails[0] })
+  }
+  return entries
 }
 
 export function selectScreener(state: AppState): Sender[] {
@@ -125,6 +143,11 @@ export function reduce(state: AppState, action: TriageAction): AppState {
         ])),
       }
     }
+    case 'SET_BUNDLE': {
+      const sender = state.senders[action.senderId]
+      if (!sender) return state
+      return { ...state, senders: { ...state.senders, [sender.id]: { ...sender, bundled: action.bundled } } }
+    }
     case 'OPEN_EMAIL': {
       const email = state.emails[action.emailId]
       if (!email || email.seen) return state
@@ -146,6 +169,7 @@ function validSender(value: unknown, id: string): value is Sender {
   return isRecord(value) && nonempty(value.id) && value.id === id &&
     nonempty(value.name) && nonempty(value.address) &&
     oneOf(value.decision, ['pending', 'approved', 'rejected']) &&
+    (value.bundled === undefined || typeof value.bundled === 'boolean') &&
     (oneOf(value.kind, senderKinds) || (Array.isArray(value.kind) && value.kind.length > 0 &&
       value.kind.every((kind: unknown) => oneOf(kind, senderKinds))))
 }
