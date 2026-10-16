@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reduce, routeIncoming, selectDisplayEntries, selectFeed, selectFocusReply, selectImbox, selectPaperTrail, selectPile, selectScreener } from './triage'
+import { reduce, routeIncoming, selectBubbledUp, selectDisplayEntries, selectFeed, selectFocusReply, selectImbox, selectPaperTrail, selectPile, selectScreener } from './triage'
 import { SCHEMA_VERSION } from './types'
 import type { AppState, Email, Sender } from './types'
 
@@ -382,5 +382,29 @@ describe('Sender Bundles (BNDL-01..02)', () => {
     ])
   })
 })
+
+describe('Bubble Up (BUBBLE-01)', () => {
+  it('hides bubbled mail until its scheduled time and returns it to the top of Imbox as new when released', () => {
+    const first = email('older', { seen: true, receivedAt: '2026-10-01T09:00:00.000Z' })
+    const second = email('newer', { seen: false, receivedAt: '2026-10-02T09:00:00.000Z' })
+    const state = mailbox([first, second])
+
+    const bubbled = reduce(state, { type: 'BUBBLE_UP', emailId: 'older', until: '2026-10-10T09:00:00.000Z' })
+    expect(ids(selectImbox(bubbled).newForYou)).toEqual(['newer'])
+    expect(ids(selectImbox(bubbled).previouslySeen)).toEqual([])
+    expect(ids(selectBubbledUp(bubbled))).toEqual(['older'])
+    expect(bubbled.emails.older.bubbledUntil).toBe('2026-10-10T09:00:00.000Z')
+
+    const tooEarly = reduce(bubbled, { type: 'BUBBLE_RELEASE', now: '2026-10-09T09:00:00.000Z' })
+    expect(ids(selectBubbledUp(tooEarly))).toEqual(['older'])
+
+    const released = reduce(bubbled, { type: 'BUBBLE_RELEASE', now: '2026-10-10T12:00:00.000Z' })
+    expect(selectBubbledUp(released)).toEqual([])
+    expect(ids(selectImbox(released).newForYou)).toEqual(['older', 'newer'])
+    expect(released.emails.older.seen).toBe(false)
+    expect(released.emails.older.bubbledUntil).toBeUndefined()
+  })
+})
+
 
 

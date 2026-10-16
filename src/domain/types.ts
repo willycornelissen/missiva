@@ -28,6 +28,7 @@ export interface Email {
   box: BoxKind
   pile: PileKind | null
   originBox: BoxKind
+  bubbledUntil?: string | null
 }
 
 export type DisplayEntry =
@@ -50,6 +51,8 @@ export type TriageAction =
   | { type: 'SET_ASIDE'; emailId: EmailId }
   | { type: 'REMOVE_FROM_PILE'; emailId: EmailId }
   | { type: 'SET_BUNDLE'; senderId: SenderId; bundled: boolean }
+  | { type: 'BUBBLE_UP'; emailId: EmailId; until: string }
+  | { type: 'BUBBLE_RELEASE'; now: string }
   | { type: 'FOCUS_REPLY_START' }
   | { type: 'FOCUS_REPLY_NEXT' }
   | { type: 'FOCUS_REPLY_EXIT' }

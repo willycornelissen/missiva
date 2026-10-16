@@ -1613,3 +1613,165 @@ Adequacy A-D passed: exact state/payload assertions, all tests mapped to `PAPER-
 | T27 | Feature view | unit | unit | ✅ OK |
 | T28 | Components / views | unit | unit | ✅ OK |
 
+---
+
+## P3 Implementation Plan (Bubble Up, Read Together & Spy-pixel Blocker)
+
+### Phase 7: P3 Bubble Up, Read Together & Spy-pixel Blocker
+
+```text
+T29 → T30 → T31 → T32
+```
+
+### T29: Add Bubble Up domain types, core reducer/selector, and normalization
+
+**What**: Add optional `bubbledUntil?: string | null` to `Email`, `BUBBLE_UP` and `BUBBLE_RELEASE` actions to `TriageAction`, `selectBubbledUp(state)` selector, hide bubbled emails from active box/pile selectors until released to the top of Imbox as new, and validate `bubbledUntil` in `normalizeState()`.
+**Where**: `src/domain/triage.ts`
+**Depends on**: T28
+**Reuses**: `src/domain/types.ts`, `src/domain/triage.ts`
+**Requirement**: BUBBLE-01
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [x] `BUBBLE_UP` hides an approved email from `selectImbox`, `selectFeed`, `selectPaperTrail`, and `selectPile` and lists it in `selectBubbledUp(state)` (`BUBBLE-01`)
+- [x] `BUBBLE_RELEASE` returns due bubbled emails to the top of `selectImbox(state).newForYou` as unseen (`seen: false`, `box: 'imbox'`) (`BUBBLE-01`)
+- [x] `normalizeState()` preserves valid ISO `bubbledUntil` timestamps and rejects invalid `bubbledUntil` values as malformed emails
+- [x] Gate check passes: `npm test`
+- [x] Unit tests in `src/domain/triage.test.ts` and `src/domain/normalize.test.ts` cover `BUBBLE-01` and normalization
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(triage): add bubble up scheduling, release, and normalization`
+
+**Execution evidence (T29)**: RED (2 failing tests across `triage.test.ts` and `normalize.test.ts`), then `npx vitest run src/domain/triage.test.ts src/domain/normalize.test.ts`: 107 passed, 0 failed.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| `BUBBLE_UP` hides & `BUBBLE_RELEASE` returns to top as new (`BUBBLE-01`) | `src/domain/triage.test.ts:392-406` `expect(ids(selectBubbledUp(bubbled))).toEqual(['older'])`; `expect(ids(selectImbox(released).newForYou)).toEqual(['older', 'newer'])`; `expect(released.emails.older.seen).toBe(false)` | Hides until scheduled time and returns to top of Imbox as new | Yes |
+| `bubbledUntil` normalization | `src/domain/normalize.test.ts:32-38` preserves `BUBBLE_UP`; `src/domain/normalize.test.ts:75-87` rejects `{ bubbledUntil: 'not-a-date' }` | Preserves valid ISO `bubbledUntil` and skips malformed values | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `triage.test.ts:386-407` | `BUBBLE-01` core | Yes |
+| `normalize.test.ts:32,75` | `BUBBLE-01` persistence guard | Yes |
+
+---
+
+
+### T30: Add tracking-pixel detection, HTML stripping, and seeded tracker marker
+
+**What**: Add `detectTrackingPixels(raw)` in `src/lib/sanitize.ts`, strip tracking-pixel `<img>` elements inside `sanitizeHtml(raw)`, and include a tracking-pixel marker in `src/data/seed.json`.
+**Where**: `src/lib/sanitize.ts`
+**Depends on**: T29
+**Reuses**: `src/lib/sanitize.ts`, `src/data/seed.json`
+**Requirement**: SPY-01
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [ ] `detectTrackingPixels(raw)` identifies `1x1` / tracker URL / `data-spy-pixel` images while ignoring normal inline images (`SPY-01`)
+- [ ] `sanitizeHtml(raw)` removes tracking-pixel `<img>` tags from rendered HTML while preserving normal `<img>` tags (`SPY-01`)
+- [ ] Bundled `src/data/seed.json` includes a seeded tracking-pixel marker for demo verification
+- [ ] Gate check passes: `npm test`
+- [ ] Unit tests in `src/lib/sanitize.test.ts` and `src/data/seed.test.ts` cover tracking-pixel detection, stripping, and seeded tracker presence
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(privacy): detect and strip tracking pixels in email sanitizer`
+
+---
+
+### T31: Build Bubble Up tray and Read Together batch view in Imbox
+
+**What**: Add `Bubble Up` action in `MailActions`, `Bubbled Up` tray with demo clock release (`Release bubbled mail`) in `ImboxView`, multi-select checkboxes in `EmailRow`/`EmailList`, and `ReadTogetherReader` stacked scrollable view in `ImboxView`.
+**Where**: `src/features/imbox/ImboxView.tsx`
+**Depends on**: T30
+**Reuses**: `src/features/common/index.tsx`, `src/features/imbox/ImboxView.tsx`
+**Requirement**: BUBBLE-01, READ-01
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [ ] Clicking `Bubble up` hides the email into the `Bubbled Up` tray and clicking `Release bubbled mail` returns it to the top of `New for you` (`BUBBLE-01`)
+- [ ] Selecting multiple emails and clicking `Read Together` renders all selected emails stacked in one scrollable view and marks them seen (`READ-01`)
+- [ ] Gate check passes: `npm test`
+- [ ] Component tests in `src/features/imbox/ImboxView.test.tsx` cover `BUBBLE-01` and `READ-01`
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(imbox): add bubble up scheduling tray and read together view`
+
+---
+
+### T32: Surface Spy-pixel blocker notice and sender tracker flag in reader and feed
+
+**What**: Display `Spy pixel blocked` and `Tracker flagged` indicators in `MailReader`, `EmailRow`, and `FeedView` when an email or sender contains a known tracking-pixel pattern.
+**Where**: `src/features/common/index.tsx`
+**Depends on**: T31
+**Reuses**: `src/lib/sanitize.ts`, `src/features/common/index.tsx`, `src/features/feed/FeedView.tsx`
+**Requirement**: SPY-01
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [ ] Opening an email with a tracking pixel blocks the pixel from the DOM, shows `Spy pixel blocked`, and flags the sender as `Tracker flagged` (`SPY-01`)
+- [ ] Gate check passes: `npm run build && npm run lint && npm test`
+- [ ] Component tests in `src/features/common/common.test.tsx` and `src/features/feed/FeedView.test.tsx` cover `SPY-01`
+
+**Tests**: unit
+**Gate**: build
+
+**Commit**: `feat(privacy): flag tracker senders and show blocked spy pixel notice`
+
+---
+
+## P3 Validation Tables (T29–T32)
+
+### P3 Task Granularity Check
+
+| Task | Scope | Status |
+| ---- | ----- | ------ |
+| T29: Bubble Up core & normalization | Core reducer/selector/guard | ✅ Granular |
+| T30: Spy-pixel sanitizer & seed | Sanitizer + seed | ✅ Granular |
+| T31: Bubble Up & Read Together UI | Imbox + common row selection | ✅ Granular |
+| T32: Spy-pixel UI flags | Reader + Feed + row badge | ✅ Granular |
+
+### P3 Diagram-Definition Cross-Check
+
+| Task | Depends On (task body) | Diagram Shows | Status |
+| ---- | ---------------------- | ------------- | ------ |
+| T29 | T28 (Phase 6) | Cross-phase start of Phase 7 | ✅ Match |
+| T30 | T29 | T29 → T30 | ✅ Match |
+| T31 | T30 | T30 → T31 | ✅ Match |
+| T32 | T31 | T31 → T32 | ✅ Match |
+
+### P3 Test Co-location Validation
+
+| Task | Code Layer | Matrix Requires | Task Says | Status |
+| ---- | ---------- | --------------- | --------- | ------ |
+| T29 | Triage core | unit | unit | ✅ OK |
+| T30 | Lib (sanitizer) | unit | unit | ✅ OK |
+| T31 | Feature view | unit | unit | ✅ OK |
+| T32 | Components / views | unit | unit | ✅ OK |
+
+

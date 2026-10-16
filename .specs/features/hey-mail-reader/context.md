@@ -65,8 +65,23 @@ P3 stories (`Bubble Up`, `Read Together`, `Spy-pixel blocker`) remain deferred.
 
 - HEY's Paper Trail box for receipts/transactional mail and HEY's "Bundle this sender" row grouping inside Imbox/Paper Trail.
 
----
+## P3 Feature Boundary & Implementation Decisions
 
-## Deferred Ideas
+Deliver the three P3 stories of `hey-mail-reader` on top of the verified P1+P2 foundation:
 
-- None — discussion stayed within the P2 feature scope (`PAPER-01`, `PAPER-02`, `BNDL-01`, `BNDL-02`).
+### 1. Bubble Up (`BUBBLE-01`)
+- `Email` supports optional `bubbledUntil?: string | null` (valid ISO timestamp when scheduled to bubble up).
+- Dispatching `{ type: 'BUBBLE_UP', emailId, until }` on an approved email sets `bubbledUntil: until`, clears `pile: null`, and hides the email from active box selectors (`selectImbox`, `selectFeed`, `selectPaperTrail`, `selectPile`) while surfacing it in `selectBubbledUp(state)`.
+- Dispatching `{ type: 'BUBBLE_RELEASE', now }` releases all emails whose `bubbledUntil <= now`, clearing `bubbledUntil`, setting `box: 'imbox'`, `seen: false`, `pile: null`, updating `receivedAt: now`, and moving their IDs to the newest end of `state.order` so they reappear at the top of `New for you` in the Imbox.
+- `ImboxView` renders a `Bubbled Up` tray when `selectBubbledUp(state).length > 0` with a demo clock action (`Release bubbled mail`) that advances past the scheduled `bubbledUntil` timestamp so the user can watch bubbled mail return to the top of the Imbox.
+
+### 2. Read Together (`READ-01`)
+- `EmailRow` and `EmailList` support multi-select checkboxes (`Select ${email.subject}`) in `ImboxView`.
+- When one or more emails are selected, a `Read Together` action bar appears with `Read Together (${count})` and `Clear selection`.
+- Clicking `Read Together` marks the selected emails as seen (`OPEN_EMAIL`) and opens `ReadTogetherReader`, which renders all selected emails stacked vertically in a single scrollable view (`role="region"`, `aria-label="Read Together"`) with full sanitized bodies and a `Back to mail` control.
+
+### 3. Spy-pixel Blocker (`SPY-01`)
+- `detectTrackingPixels(raw: string): number` in `src/lib/sanitize.ts` detects `<img>` tags matching known tracking-pixel patterns (`1x1` dimensions via `width="1"`/`height="1"`, `data-spy-pixel` attribute, or tracker URL markers such as `pixel.`, `/open.gif`, `/track`, `/beacon`, `spy-pixel`).
+- `sanitizeHtml(raw: string): string` strips any detected tracking-pixel `<img>` tags during DOMPurify sanitization so the browser never requests the tracking pixel URL.
+- When an email contains a tracking pixel (`detectTrackingPixels(email.bodyHtml) > 0`) or a sender has sent an email with a tracking pixel, the UI displays a visible blocked-tracker indicator (`Spy pixel blocked`) in the reader/feed and flags the sender (`Tracker flagged`), and `seed.json` includes a seeded tracking-pixel marker for immediate demo verification.
+

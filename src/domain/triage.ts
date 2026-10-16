@@ -11,7 +11,7 @@ function orderedEmails(state: AppState): Email[] {
 
 export function selectImbox(state: AppState): { newForYou: Email[]; previouslySeen: Email[] } {
   const emails = orderedEmails(state).filter((email) =>
-    state.senders[email.senderId]?.decision === 'approved' && email.box === 'imbox' && email.pile === null)
+    state.senders[email.senderId]?.decision === 'approved' && email.box === 'imbox' && email.pile === null && !email.bubbledUntil)
   return {
     newForYou: emails.filter((email) => !email.seen),
     previouslySeen: emails.filter((email) => email.seen),
@@ -29,17 +29,23 @@ function destination(sender: Sender): BoxKind {
 
 export function selectFeed(state: AppState): Email[] {
   return orderedEmails(state).filter((email) =>
-    state.senders[email.senderId]?.decision === 'approved' && email.box === 'feed' && email.pile === null)
+    state.senders[email.senderId]?.decision === 'approved' && email.box === 'feed' && email.pile === null && !email.bubbledUntil)
 }
 
 export function selectPaperTrail(state: AppState, query = ''): Email[] {
   const needle = query.trim().toLowerCase()
   return orderedEmails(state).filter((email) => {
     const sender = state.senders[email.senderId]
-    if (sender?.decision !== 'approved' || email.box !== 'paperTrail' || email.pile !== null) return false
+    if (sender?.decision !== 'approved' || email.box !== 'paperTrail' || email.pile !== null || email.bubbledUntil) return false
     if (!needle) return true
     return [sender.name, sender.address, email.subject].some((field) => field.toLowerCase().includes(needle))
   })
+}
+
+export function selectBubbledUp(state: AppState): Email[] {
+  return orderedEmails(state).filter((email) =>
+    state.senders[email.senderId]?.decision === 'approved' && Boolean(email.bubbledUntil))
+    .sort((a, b) => Date.parse(a.bubbledUntil!) - Date.parse(b.bubbledUntil!))
 }
 
 export function selectDisplayEntries(state: AppState, emails: Email[]): DisplayEntry[] {
@@ -79,7 +85,7 @@ export function routeIncoming(state: AppState, email: Email): AppState {
 
 export function selectPile(state: AppState, pile: PileKind): Email[] {
   return orderedEmails(state).filter((email) =>
-    state.senders[email.senderId]?.decision === 'approved' &&
+    state.senders[email.senderId]?.decision === 'approved' && !email.bubbledUntil &&
     (email.box === 'imbox' || email.box === 'feed' || email.box === 'paperTrail') && email.pile === pile)
 }
 
@@ -148,6 +154,25 @@ export function reduce(state: AppState, action: TriageAction): AppState {
       if (!sender) return state
       return { ...state, senders: { ...state.senders, [sender.id]: { ...sender, bundled: action.bundled } } }
     }
+    case 'BUBBLE_UP': {
+      const email = state.emails[action.emailId]
+      if (!email || state.senders[email.senderId]?.decision !== 'approved' || !isoDate(action.until)) return state
+      return replaceEmail(state, { ...email, pile: null, bubbledUntil: action.until })
+    }
+    case 'BUBBLE_RELEASE': {
+      if (!isoDate(action.now)) return state
+      const nowMs = Date.parse(action.now)
+      const due = Object.values(state.emails).filter((e) => e.bubbledUntil && Date.parse(e.bubbledUntil) <= nowMs)
+      if (!due.length) return state
+      const emails = { ...state.emails }
+      for (const item of due) {
+        const rest = { ...item, seen: false, box: 'imbox' as const, pile: null, receivedAt: action.now }
+        delete rest.bubbledUntil
+        emails[item.id] = rest
+      }
+      const order = [...state.order].sort((a, b) => Date.parse(emails[a].receivedAt) - Date.parse(emails[b].receivedAt))
+      return { ...state, emails, order }
+    }
     case 'OPEN_EMAIL': {
       const email = state.emails[action.emailId]
       if (!email || email.seen) return state
@@ -164,6 +189,8 @@ function oneOf<T extends string>(value: unknown, options: readonly T[]): value i
 
 const senderKinds = ['personal', 'newsletter', 'receipt'] as const
 const boxes = ['imbox', 'feed', 'screener', 'screenedOut', 'paperTrail'] as const
+const isoDate = (value: unknown): value is string => typeof value === 'string' &&
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value) && Number.isFinite(Date.parse(value))
 
 function validSender(value: unknown, id: string): value is Sender {
   return isRecord(value) && nonempty(value.id) && value.id === id &&
@@ -177,9 +204,8 @@ function validSender(value: unknown, id: string): value is Sender {
 function validEmail(value: unknown, id: string, senders: AppState['senders']): value is Email {
   return isRecord(value) && nonempty(value.id) && value.id === id &&
     validEmailContent(value, senders) && typeof value.seen === 'boolean' &&
-    typeof value.receivedAt === 'string' &&
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value.receivedAt) &&
-    Number.isFinite(Date.parse(value.receivedAt)) &&
+    isoDate(value.receivedAt) &&
+    (value.bubbledUntil === undefined || value.bubbledUntil === null || isoDate(value.bubbledUntil)) &&
     oneOf(value.box, boxes) && oneOf(value.originBox, boxes) &&
     (value.pile === null || oneOf(value.pile, ['replyLater', 'setAside']))
 }

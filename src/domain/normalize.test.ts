@@ -29,6 +29,7 @@ describe('schema guard (IMBOX-05)', () => {
     let state = buildSeedState()
     state = reduce(state, { type: 'SCREEN_DECIDE', senderId: 'noah', decision: 'approved' })
     state = reduce(state, { type: 'SET_BUNDLE', senderId: 'rail', bundled: true })
+    state = reduce(state, { type: 'BUBBLE_UP', emailId: 'mail-11', until: '2026-10-20T09:00:00.000Z' })
     state = reduce(state, { type: 'OPEN_EMAIL', emailId: 'mail-31' })
     state = reduce(state, { type: 'SET_ASIDE', emailId: 'mail-25' })
     state = reduce(state, { type: 'FOCUS_REPLY_START' })
@@ -73,7 +74,7 @@ describe('malformed email edge', () => {
     { subject: null }, { snippet: [] }, { bodyHtml: 42 },
     { receivedAt: 'not-a-date' }, { receivedAt: '2026-10-01' },
     { seen: 'false' }, { box: 'unknown' }, { pile: ['replyLater', 'setAside'] },
-    { originBox: 'unknown' },
+    { originBox: 'unknown' }, { bubbledUntil: 'not-a-date' },
   ])('skips malformed field values without replacing healthy mail (%#)', (fields) => {
     const state = buildSeedState()
     const result = normalizeState({
