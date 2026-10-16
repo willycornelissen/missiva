@@ -28,7 +28,8 @@ export function buildSeed(): { state: AppState; diagnostics: NormalizationDiagno
     const sender = bySender[message.senderId]
     const box: BoxKind = sender.decision === 'pending' ? 'screener'
       : sender.decision === 'rejected' ? 'screenedOut'
-        : sender.kind === 'newsletter' ? 'feed' : 'imbox'
+        : sender.kind === 'receipt' ? 'paperTrail'
+          : sender.kind === 'newsletter' ? 'feed' : 'imbox'
     return [{
       senderId: message.senderId, subject: message.subject,
       snippet: message.snippet, bodyHtml: message.bodyHtml, id,

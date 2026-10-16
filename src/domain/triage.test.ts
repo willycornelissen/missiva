@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reduce, routeIncoming, selectFeed, selectFocusReply, selectImbox, selectPile, selectScreener } from './triage'
+import { reduce, routeIncoming, selectFeed, selectFocusReply, selectImbox, selectPaperTrail, selectPile, selectScreener } from './triage'
 import { SCHEMA_VERSION } from './types'
 import type { AppState, Email, Sender } from './types'
 
@@ -173,12 +173,30 @@ describe('Feed (FEED-01..04)', () => {
     expect(next.emails.future.box).toBe('imbox')
   })
 
-  it('keeps approved receipts accessible in the P1 Imbox without a Paper Trail UI', () => {
+  it('routes approved receipt senders exclusively to Paper Trail (PAPER-01)', () => {
     const state = mailbox([email('receipt')], [sender({ kind: 'receipt', decision: 'pending' })])
     const approved = reduce(state, { type: 'SCREEN_DECIDE', senderId: 'friend', decision: 'approved' })
-    const next = routeIncoming(approved, email('future-receipt'))
-    expect(ids(selectImbox(next).newForYou)).toEqual(['future-receipt', 'receipt'])
+    const next = routeIncoming(approved, email('future-receipt', { receivedAt: '2026-10-03T09:00:00.000Z' }))
+    expect(selectImbox(next)).toEqual({ newForYou: [], previouslySeen: [] })
     expect(selectFeed(next)).toEqual([])
+    expect(ids(selectPaperTrail(next))).toEqual(['future-receipt', 'receipt'])
+    expect(next.emails['future-receipt']).toEqual(email('future-receipt', {
+      receivedAt: '2026-10-03T09:00:00.000Z', box: 'paperTrail', originBox: 'paperTrail',
+    }))
+  })
+
+  it.each([
+    { kind: ['receipt', 'personal'] as Sender['kind'], expected: 'imbox' as const },
+    { kind: ['personal', 'receipt'] as Sender['kind'], expected: 'imbox' as const },
+    { kind: ['newsletter', 'receipt'] as Sender['kind'], expected: 'paperTrail' as const },
+    { kind: ['receipt', 'newsletter'] as Sender['kind'], expected: 'paperTrail' as const },
+  ])('routes multi-classification $kind by personal > receipt > newsletter precedence to $expected', ({ kind, expected }) => {
+    const state = mailbox([email('first')], [sender({ kind, decision: 'pending' })])
+    const approved = reduce(state, { type: 'SCREEN_DECIDE', senderId: 'friend', decision: 'approved' })
+    const next = routeIncoming(approved, email('future', { receivedAt: '2026-10-03T09:00:00.000Z' }))
+    expect(next.emails.first.box).toBe(expected)
+    expect(next.emails.future.box).toBe(expected)
+    expect(ids(expected === 'imbox' ? selectImbox(next).newForYou : selectPaperTrail(next))).toEqual(['future', 'first'])
   })
 })
 
@@ -261,8 +279,10 @@ describe('Set Aside and pile conflicts (ASIDE-01..04)', () => {
   it.each([
     { box: 'imbox', kind: 'personal', action: 'SET_ASIDE', seen: false },
     { box: 'feed', kind: 'newsletter', action: 'SET_ASIDE', seen: true },
+    { box: 'paperTrail', kind: 'receipt', action: 'SET_ASIDE', seen: false },
     { box: 'imbox', kind: 'personal', action: 'REPLY_LATER', seen: true },
     { box: 'feed', kind: 'newsletter', action: 'REPLY_LATER', seen: false },
+    { box: 'paperTrail', kind: 'receipt', action: 'REPLY_LATER', seen: true },
   ] as const)('restores $action mail to $box with its original seen flag', ({ box, kind, action, seen }) => {
     const original = email('saved', { box, originBox: box, seen })
     const state = mailbox([original], [sender({ kind })])
@@ -271,7 +291,7 @@ describe('Set Aside and pile conflicts (ASIDE-01..04)', () => {
     expect(returned.emails.saved).toEqual(original)
     expect(selectPile(returned, 'setAside')).toEqual([])
     expect(selectPile(returned, 'replyLater')).toEqual([])
-    expect(box === 'feed' ? selectFeed(returned) : seen
+    expect(box === 'feed' ? selectFeed(returned) : box === 'paperTrail' ? selectPaperTrail(returned) : seen
       ? selectImbox(returned).previouslySeen : selectImbox(returned).newForYou).toEqual([original])
   })
 
@@ -305,3 +325,26 @@ describe('Set Aside and pile conflicts (ASIDE-01..04)', () => {
     expect(selectPile(next, 'setAside')).toEqual([])
   })
 })
+
+describe('Paper Trail (PAPER-01..02)', () => {
+  it('lists approved non-piled Paper Trail emails newest first and filters by sender name, address, or subject', () => {
+    const rail = sender({ id: 'rail', name: 'North Rail', address: 'tickets@rail.example', kind: 'receipt' })
+    const bookshop = sender({ id: 'bookshop', name: 'Corner Bookshop', address: 'orders@books.example', kind: 'receipt' })
+    const pendingReceipt = sender({ id: 'pending-shop', name: 'Pending Shop', address: 'wait@shop.example', kind: 'receipt', decision: 'pending' })
+    const state = mailbox([
+      email('older-rail', { senderId: 'rail', subject: 'Train ticket to Utrecht', box: 'paperTrail', originBox: 'paperTrail', receivedAt: '2026-10-01T09:00:00.000Z' }),
+      email('newer-book', { senderId: 'bookshop', subject: 'Receipt: The Art of Noticing', box: 'paperTrail', originBox: 'paperTrail', receivedAt: '2026-10-03T09:00:00.000Z' }),
+      email('piled-rail', { senderId: 'rail', subject: 'Return journey', box: 'paperTrail', originBox: 'paperTrail', pile: 'setAside', receivedAt: '2026-10-04T09:00:00.000Z' }),
+      email('pending-item', { senderId: 'pending-shop', subject: 'Pending order', box: 'screener', originBox: 'screener', receivedAt: '2026-10-05T09:00:00.000Z' }),
+      email('imbox-item', { senderId: 'friend', subject: 'Personal receipt mention', box: 'imbox', originBox: 'imbox', receivedAt: '2026-10-06T09:00:00.000Z' }),
+    ], [rail, bookshop, pendingReceipt, sender()])
+
+    expect(ids(selectPaperTrail(state))).toEqual(['newer-book', 'older-rail'])
+    expect(ids(selectPaperTrail(state, '   '))).toEqual(['newer-book', 'older-rail'])
+    expect(ids(selectPaperTrail(state, '  NORTH rail '))).toEqual(['older-rail'])
+    expect(ids(selectPaperTrail(state, 'ORDERS@BOOKS.EXAMPLE'))).toEqual(['newer-book'])
+    expect(ids(selectPaperTrail(state, 'utrecht'))).toEqual(['older-rail'])
+    expect(selectPaperTrail(state, 'nonexistent')).toEqual([])
+  })
+})
+

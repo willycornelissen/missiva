@@ -136,12 +136,12 @@ describe('normalization preserves triage invariants', () => {
     state.emails['mail-01'] = { ...state.emails['mail-01'], box: 'feed', originBox: 'feed' }
     state.emails['mail-04'] = { ...state.emails['mail-04'], box: 'imbox', pile: 'replyLater' }
     state.emails['mail-09'] = { ...state.emails['mail-09'], box: 'feed', pile: 'setAside' }
-    state.emails['mail-03'] = { ...state.emails['mail-03'], box: 'paperTrail', originBox: 'paperTrail' }
+    state.emails['mail-03'] = { ...state.emails['mail-03'], box: 'imbox', originBox: 'imbox' }
     const result = normalizeState(state)
     expect(result.state.emails['mail-01']).toEqual({ ...state.emails['mail-01'], box: 'imbox', originBox: 'imbox' })
     expect(result.state.emails['mail-04']).toEqual({ ...state.emails['mail-04'], box: 'screener', originBox: 'screener', pile: null })
     expect(result.state.emails['mail-09']).toEqual({ ...state.emails['mail-09'], box: 'screenedOut', originBox: 'screenedOut', pile: null })
-    expect(result.state.emails['mail-03']).toEqual({ ...state.emails['mail-03'], box: 'imbox', originBox: 'imbox' })
+    expect(result.state.emails['mail-03']).toEqual({ ...state.emails['mail-03'], box: 'paperTrail', originBox: 'paperTrail' })
     expect(result.state.senders.maya.kind).toEqual(['newsletter', 'personal'])
     expect(result.state.senders.maya.kind).not.toBe(state.senders.maya.kind)
     expect(result.restoredSeed).toBe(false)

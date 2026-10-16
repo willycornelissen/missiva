@@ -1423,16 +1423,36 @@ T24 → T25 → T26 → T27 → T28
 
 **Done when**:
 
-- [ ] Approved receipt senders route to `paperTrail` (`PAPER-01`) with `personal > receipt > newsletter` precedence
-- [ ] `selectPaperTrail(state, query?)` returns approved non-piled `paperTrail` emails newest-first and filters case-insensitively by sender name, sender address, and subject (`PAPER-02`)
-- [ ] Paper Trail emails can enter `replyLater`/`setAside` and return to `paperTrail` on `REMOVE_FROM_PILE` or `FOCUS_REPLY_NEXT`
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests in `src/domain/triage.test.ts`, `src/domain/normalize.test.ts`, and `src/data/seed.test.ts` cover `PAPER-01`, `PAPER-02`, multi-kind precedence, and pile round-trip
+- [x] Approved receipt senders route to `paperTrail` (`PAPER-01`) with `personal > receipt > newsletter` precedence
+- [x] `selectPaperTrail(state, query?)` returns approved non-piled `paperTrail` emails newest-first and filters case-insensitively by sender name, sender address, and subject (`PAPER-02`)
+- [x] Paper Trail emails can enter `replyLater`/`setAside` and return to `paperTrail` on `REMOVE_FROM_PILE` or `FOCUS_REPLY_NEXT`
+- [x] Gate check passes: `npm test`
+- [x] Unit tests in `src/domain/triage.test.ts`, `src/domain/normalize.test.ts`, and `src/data/seed.test.ts` cover `PAPER-01`, `PAPER-02`, multi-kind precedence, and pile round-trip
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(triage): add paper trail routing, search selector, and pile support`
+
+**Execution evidence (T25)**: Targeted RED failed 8 assertions before implementation; after implementation, domain/seed/repository tests passed (116 passed across 4 files; full suite 199 tests, +7 new cases).
+
+| Criterion (A) | Assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| PAPER-01 receipt routing & seed | `src/domain/triage.test.ts:180-185`: `expect(selectImbox(next)).toEqual({ newForYou: [], previouslySeen: [] })`; `expect(selectFeed(next)).toEqual([])`; `expect(ids(selectPaperTrail(next))).toEqual(['future-receipt', 'receipt'])`; `src/data/seed.test.ts:43-44`: `expect(email.box).toBe('paperTrail')` | Approved receipts route exclusively to Paper Trail | Yes |
+| Multi-kind precedence (`personal > receipt > newsletter`) | `src/domain/triage.test.ts:197-199`: `expect(next.emails.first.box).toBe(expected)`; `expect(next.emails.future.box).toBe(expected)` | `personal` routes to `imbox`; `receipt+newsletter` routes to `paperTrail` | Yes |
+| PAPER-02 search & newest-first order | `src/domain/triage.test.ts:342-347`: `expect(ids(selectPaperTrail(state))).toEqual(['newer-book', 'older-rail'])`; `expect(ids(selectPaperTrail(state, '  NORTH rail '))).toEqual(['older-rail'])`; `expect(ids(selectPaperTrail(state, 'ORDERS@BOOKS.EXAMPLE'))).toEqual(['newer-book'])`; `expect(ids(selectPaperTrail(state, 'utrecht'))).toEqual(['older-rail'])`; `expect(selectPaperTrail(state, 'nonexistent')).toEqual([])` | Newest-first Paper Trail list, case-insensitive trimmed search across sender name, address, and subject | Yes |
+| Paper Trail pile round-trip & routing repair | `src/domain/triage.test.ts:282,285,291-295`: `expect(returned.emails.saved).toEqual(original)` and `selectPaperTrail(returned)` equals `[original]`; `src/domain/normalize.test.ts:144`: `expect(result.state.emails['mail-03']).toEqual({ ...state.emails['mail-03'], box: 'paperTrail', originBox: 'paperTrail' })` | Paper Trail emails enter/leave piles and normalize to `paperTrail` | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `src/domain/triage.test.ts:180-185` | PAPER-01 | Yes |
+| `src/domain/triage.test.ts:197-199` | Multi-classification edge (`personal > receipt > newsletter`) | Yes |
+| `src/domain/triage.test.ts:282,285,291-295` | T25 Paper Trail pile round-trip | Yes |
+| `src/domain/triage.test.ts:342-347` | PAPER-01, PAPER-02 | Yes |
+| `src/domain/normalize.test.ts:139,144` | PAPER-01 normalization invariant | Yes |
+| `src/data/seed.test.ts:38-45` | PAPER-01 seed routing | Yes |
+
+Adequacy A-D passed: exact state/payload assertions, all tests mapped to `PAPER-01`/`PAPER-02`/edge, AD-004 followed.
 
 ---
 

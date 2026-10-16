@@ -22,12 +22,24 @@ function destination(sender: Sender): BoxKind {
   if (sender.decision === 'pending') return 'screener'
   if (sender.decision === 'rejected') return 'screenedOut'
   const kinds = Array.isArray(sender.kind) ? sender.kind : [sender.kind]
-  return kinds.includes('newsletter') && !kinds.includes('personal') ? 'feed' : 'imbox'
+  if (kinds.includes('personal')) return 'imbox'
+  if (kinds.includes('receipt')) return 'paperTrail'
+  return kinds.includes('newsletter') ? 'feed' : 'imbox'
 }
 
 export function selectFeed(state: AppState): Email[] {
   return orderedEmails(state).filter((email) =>
     state.senders[email.senderId]?.decision === 'approved' && email.box === 'feed' && email.pile === null)
+}
+
+export function selectPaperTrail(state: AppState, query = ''): Email[] {
+  const needle = query.trim().toLowerCase()
+  return orderedEmails(state).filter((email) => {
+    const sender = state.senders[email.senderId]
+    if (sender?.decision !== 'approved' || email.box !== 'paperTrail' || email.pile !== null) return false
+    if (!needle) return true
+    return [sender.name, sender.address, email.subject].some((field) => field.toLowerCase().includes(needle))
+  })
 }
 
 export function selectScreener(state: AppState): Sender[] {
@@ -50,7 +62,7 @@ export function routeIncoming(state: AppState, email: Email): AppState {
 export function selectPile(state: AppState, pile: PileKind): Email[] {
   return orderedEmails(state).filter((email) =>
     state.senders[email.senderId]?.decision === 'approved' &&
-    (email.box === 'imbox' || email.box === 'feed') && email.pile === pile)
+    (email.box === 'imbox' || email.box === 'feed' || email.box === 'paperTrail') && email.pile === pile)
 }
 
 export function selectFocusReply(state: AppState): Email | null {
@@ -71,7 +83,7 @@ function replaceEmail(state: AppState, email: Email): AppState {
 function putInPile(state: AppState, emailId: string, pile: PileKind): AppState {
   const email = state.emails[emailId]
   if (!email || state.senders[email.senderId]?.decision !== 'approved' ||
-    (email.box !== 'imbox' && email.box !== 'feed')) return state
+    (email.box !== 'imbox' && email.box !== 'feed' && email.box !== 'paperTrail')) return state
   return replaceEmail(state, {
     ...email, pile, originBox: email.pile === null ? email.box : email.originBox,
   })

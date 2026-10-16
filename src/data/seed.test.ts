@@ -35,6 +35,15 @@ describe('bundled demo mailbox (T3)', () => {
     expect(new Set(Object.values(seed.emails).map((e) => e.pile))).toEqual(
       new Set([null, 'replyLater', 'setAside']),
     )
+    expect(new Set(Object.values(seed.emails).map((e) => e.box))).toEqual(
+      new Set(['imbox', 'feed', 'paperTrail', 'screener', 'screenedOut']),
+    )
+    for (const email of Object.values(seed.emails)) {
+      if (seed.senders[email.senderId].kind === 'receipt') {
+        expect(email.box).toBe('paperTrail')
+        expect(email.originBox).toBe('paperTrail')
+      }
+    }
     expect(buildSeedState()).toEqual(seed)
   })
 })
