@@ -101,4 +101,48 @@ describe('Paper Trail (PAPER-01..02)', () => {
     await user.click(within(nav).getByRole('link', { name: 'Paper Trail 1' }))
     expect(screen.getByRole('article', { name: 'Night train booking' })).toBeVisible()
   })
+
+  it('bundles a receipt sender in Paper Trail, expands newest first, opens an email, and unbundles (BNDL-01..02)', async () => {
+    const user = userEvent.setup()
+    const railOld = message('rail-old', {
+      senderId: 'rail', subject: 'Morning train receipt',
+      box: 'paperTrail', originBox: 'paperTrail', receivedAt: '2026-10-08T09:00:00.000Z',
+    })
+    const railNew = message('rail-new', {
+      senderId: 'rail', subject: 'Evening train receipt',
+      box: 'paperTrail', originBox: 'paperTrail', receivedAt: '2026-10-10T09:00:00.000Z',
+    })
+    const bookMail = message('book-mid', {
+      senderId: 'bookshop', subject: 'Bookshop invoice',
+      box: 'paperTrail', originBox: 'paperTrail', receivedAt: '2026-10-09T09:00:00.000Z',
+    })
+    const app = renderMailbox(mailbox([railOld, railNew, bookMail]), '/paper-trail')
+
+    await user.click(screen.getAllByRole('button', { name: 'Bundle North Rail' })[0])
+    expect(app.storedState().senders.rail.bundled).toBe(true)
+    expect(screen.getAllByRole('article').map((el) => el.getAttribute('aria-label'))).toEqual([
+      'North Rail (2)',
+      'Bookshop invoice',
+    ])
+
+    await user.click(screen.getByRole('button', { name: 'Expand bundle from North Rail (2)' }))
+    const group = screen.getByRole('group', { name: 'Bundled emails from North Rail' })
+    expect(within(group).getAllByRole('article').map((el) => el.getAttribute('aria-label'))).toEqual([
+      'Evening train receipt',
+      'Morning train receipt',
+    ])
+
+    await user.click(within(group).getByRole('button', { name: 'Open Morning train receipt' }))
+    expect(screen.getByTestId('email-body')).toHaveTextContent('Message rail-old')
+    await user.click(screen.getByRole('button', { name: 'Back to mail' }))
+
+    await user.click(screen.getAllByRole('button', { name: 'Unbundle North Rail' })[0])
+    expect(app.storedState().senders.rail.bundled).toBe(false)
+    expect(screen.getAllByRole('article').map((el) => el.getAttribute('aria-label'))).toEqual([
+      'Evening train receipt',
+      'Bookshop invoice',
+      'Morning train receipt',
+    ])
+  })
 })
+

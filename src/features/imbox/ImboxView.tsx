@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { selectImbox, selectScreener } from '../../domain/triage'
 import { useAppState, useDispatch } from '../../state/AppStore'
-import { EmailRow, EmptyState, MailReader, ViewHeader } from '../common'
+import { EmailList, EmptyState, MailReader, ViewHeader } from '../common'
 import { useMailShortcuts } from '../common/useShortcuts'
 import styles from './ImboxView.module.css'
 
@@ -27,10 +27,10 @@ export function ImboxView() {
           <h2><span aria-hidden="true">{id === 'new-mail' ? '✦' : '✓'}</span> {title}</h2><span>{emails.length}</span>
           <small>{id === 'new-mail' ? 'A few good things for you' : 'Already on your radar'}</small>
         </header>
-        <div className={styles.rows}>{emails.length ? emails.map((email) => <EmailRow key={email.id} email={email} sender={state.senders[email.senderId]}
-          selected={selection.selectedId === email.id} onSelect={() => selection.select(email.id)} onOpen={() => {
+        <div className={styles.rows}>{emails.length ? <EmailList emails={emails} selectedId={selection.selectedId}
+          onSelect={selection.select} onOpen={(email) => {
           dispatch({ type: 'OPEN_EMAIL', emailId: email.id }); setOpenId(email.id)
-        }} />) : <EmptyState title={empty} message={hint} />}</div>
+        }} /> : <EmptyState title={empty} message={hint} />}</div>
       </section>)}
       <p className={styles.bottomNote}>A place for everything. And a little room to breathe.</p>
     </>}

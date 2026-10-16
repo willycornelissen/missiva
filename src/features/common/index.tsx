@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Email, Sender } from '../../domain/types'
-import { selectPile } from '../../domain/triage'
+import { selectDisplayEntries, selectPile } from '../../domain/triage'
 import { sanitizeHtml } from '../../lib/sanitize'
 import { useAppState, useDispatch } from '../../state/AppStore'
 import styles from './Common.module.css'
@@ -29,13 +30,64 @@ export function EmailRow({ email, sender, onOpen, selected = false, onSelect }: 
   </article>
 }
 
-export function MailActions({ email, compact = false, onDone }: { email: Email; compact?: boolean; onDone?: () => void }) {
+export function BundleRow({ sender, emails, latest, selectedId, onSelect, onOpen }: {
+  sender: Sender; emails: Email[]; latest: Email; selectedId?: string | null
+  onSelect: (emailId: string) => void; onOpen: (email: Email) => void
+}) {
+  const [expanded, setExpanded] = useState(false)
   const dispatch = useDispatch()
+  return <article aria-label={`${sender.name} (${emails.length})`} data-mail-id={latest.id} className={styles.bundleRow}>
+    <div className={styles.row}>
+      <button type="button" className={styles.openRow} aria-expanded={expanded}
+        aria-label={`${expanded ? 'Collapse' : 'Expand'} bundle from ${sender.name} (${emails.length})`}
+        onClick={() => setExpanded((current) => !current)}>
+        <Avatar sender={sender} />
+        <span className={styles.rowContent}>
+          <span className={styles.sender}>{sender.name} <span className={styles.bundleCount}>{emails.length}</span></span>
+          <span className={styles.subject}>{latest.subject}</span>
+          <span className={styles.snippet}>{latest.snippet}</span>
+        </span>
+        <span className={styles.rowMeta}>
+          <time dateTime={latest.receivedAt}>{new Date(latest.receivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</time>
+          <span aria-hidden="true" className={styles.bundleChevron}>{expanded ? '▾' : '▸'}</span>
+        </span>
+      </button>
+      <div className={styles.rowActions}>
+        <button type="button" className={styles.action} aria-label={`Unbundle ${sender.name}`} title={`Unbundle ${sender.name}`}
+          onClick={() => dispatch({ type: 'SET_BUNDLE', senderId: sender.id, bundled: false })}><span aria-hidden="true">⧉</span></button>
+      </div>
+    </div>
+    {expanded && <div className={styles.bundleItems} role="group" aria-label={`Bundled emails from ${sender.name}`}>
+      {emails.map((email) => <EmailRow key={email.id} email={email} sender={sender}
+        selected={selectedId === email.id} onSelect={() => onSelect(email.id)} onOpen={() => onOpen(email)} />)}
+    </div>}
+  </article>
+}
+
+export function EmailList({ emails, selectedId, onSelect, onOpen }: {
+  emails: Email[]; selectedId?: string | null; onSelect: (emailId: string) => void; onOpen: (email: Email) => void
+}) {
+  const state = useAppState()
+  return <>{selectDisplayEntries(state, emails).map((entry) => entry.kind === 'email'
+    ? <EmailRow key={entry.email.id} email={entry.email} sender={entry.sender}
+        selected={selectedId === entry.email.id} onSelect={() => onSelect(entry.email.id)} onOpen={() => onOpen(entry.email)} />
+    : <BundleRow key={`bundle-${entry.sender.id}`} sender={entry.sender} emails={entry.emails}
+        latest={entry.latest} selectedId={selectedId} onSelect={onSelect} onOpen={onOpen} />)}</>
+}
+
+export function MailActions({ email, compact = false, onDone }: { email: Email; compact?: boolean; onDone?: () => void }) {
+  const sender = useAppState().senders[email.senderId]
+  const dispatch = useDispatch()
+  const canBundle = (email.box === 'imbox' || email.box === 'paperTrail') && email.pile === null && Boolean(sender)
   return <div className={compact ? styles.rowActions : styles.actions}>
     <button className={styles.action} aria-label={`Reply later: ${email.subject}`} title="Reply later (r)"
       onClick={() => { dispatch({ type: 'REPLY_LATER', emailId: email.id }); onDone?.() }}><span aria-hidden="true">↩</span>{!compact && ' Reply Later'}</button>
     <button className={styles.action} aria-label={`Set aside: ${email.subject}`} title="Set aside (e)"
       onClick={() => { dispatch({ type: 'SET_ASIDE', emailId: email.id }); onDone?.() }}><span aria-hidden="true">▱</span>{!compact && ' Set Aside'}</button>
+    {canBundle && <button className={styles.action} aria-label={`${sender.bundled ? 'Unbundle' : 'Bundle'} ${sender.name}`}
+      title={`${sender.bundled ? 'Unbundle' : 'Bundle'} ${sender.name}`}
+      onClick={() => dispatch({ type: 'SET_BUNDLE', senderId: sender.id, bundled: !sender.bundled })}>
+      <span aria-hidden="true">⧉</span>{!compact && (sender.bundled ? ' Unbundle sender' : ' Bundle sender')}</button>}
     {!compact && email.pile && <ReturnToBox email={email} onDone={onDone} />}
   </div>
 }

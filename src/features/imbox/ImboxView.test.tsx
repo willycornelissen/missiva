@@ -40,4 +40,38 @@ describe('Imbox', () => {
     expect(screen.getByRole('heading', { name: 'A fresh start' })).toBeVisible()
     expect(screen.queryByRole('article')).not.toBeInTheDocument()
   })
+
+  it('bundles a sender separately within New for you and Previously seen, expands newest first, persists, and unbundles (BNDL-01..02)', async () => {
+    const user = userEvent.setup()
+    const mayaOldNew = message('maya-old-new', { senderId: 'maya', subject: 'Older unseen note', receivedAt: '2026-10-08T09:00:00.000Z' })
+    const mayaLatestNew = message('maya-latest-new', { senderId: 'maya', subject: 'Latest unseen note', receivedAt: '2026-10-10T09:00:00.000Z' })
+    const mayaSeen = message('maya-seen', { senderId: 'maya', subject: 'Earlier seen note', seen: true, receivedAt: '2026-10-07T09:00:00.000Z' })
+    const { storedState } = renderMailbox(mailbox([mayaOldNew, mayaLatestNew, mayaSeen]))
+
+    const fresh = screen.getByRole('region', { name: 'New for you' })
+    const seen = screen.getByRole('region', { name: 'Previously seen' })
+    expect(within(fresh).getAllByRole('article')).toHaveLength(2)
+
+    await user.click(within(fresh).getAllByRole('button', { name: 'Bundle Maya Chen' })[0])
+    expect(storedState().senders.maya.bundled).toBe(true)
+
+    expect(within(fresh).getAllByRole('article')).toHaveLength(1)
+    expect(within(fresh).getByRole('article', { name: 'Maya Chen (2)' })).toBeVisible()
+    expect(within(seen).getByRole('article', { name: 'Maya Chen (1)' })).toBeVisible()
+
+    await user.click(within(fresh).getByRole('button', { name: 'Expand bundle from Maya Chen (2)' }))
+    const expandedGroup = within(fresh).getByRole('group', { name: 'Bundled emails from Maya Chen' })
+    expect(within(expandedGroup).getAllByRole('article').map((el) => el.getAttribute('aria-label'))).toEqual([
+      'Latest unseen note',
+      'Older unseen note',
+    ])
+
+    await user.click(within(fresh).getAllByRole('button', { name: 'Unbundle Maya Chen' })[0])
+    expect(storedState().senders.maya.bundled).toBe(false)
+    expect(within(fresh).getAllByRole('article').map((el) => el.getAttribute('aria-label'))).toEqual([
+      'Latest unseen note',
+      'Older unseen note',
+    ])
+  })
 })
+

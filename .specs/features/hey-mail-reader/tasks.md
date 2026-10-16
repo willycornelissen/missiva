@@ -1556,17 +1556,30 @@ Adequacy A-D passed: exact state/payload assertions, all tests mapped to `PAPER-
 
 **Done when**:
 
-- [ ] Bundling a sender collapses its emails into a single expandable row within each Imbox group (`New for you`, `Previously seen`) and in Paper Trail, and persists to storage (`BNDL-01`)
-- [ ] Expanding a bundle row lists that sender's emails newest-first and allows opening individual emails or unbundling the sender (`BNDL-02`)
-- [ ] Gate check passes: `npm run build && npm run lint && npm test`
-- [ ] Component tests in `src/features/imbox/ImboxView.test.tsx` and `src/features/paper-trail/PaperTrailView.test.tsx` cover collapsing, expanding newest-first, persistence across reload, and unbundling
+- [x] Bundling a sender collapses its emails into a single expandable row within each Imbox group (`New for you`, `Previously seen`) and in Paper Trail, and persists to storage (`BNDL-01`)
+- [x] Expanding a bundle row lists that sender's emails newest-first and allows opening individual emails or unbundling the sender (`BNDL-02`)
+- [x] Gate check passes: `npm run build && npm run lint && npm test`
+- [x] Component tests in `src/features/imbox/ImboxView.test.tsx` and `src/features/paper-trail/PaperTrailView.test.tsx` cover collapsing, expanding newest-first, persistence across reload, and unbundling
 
 **Tests**: unit
 **Gate**: build
 
 **Commit**: `feat(bundles): add expandable sender bundle rows to imbox and paper trail`
 
+**Execution evidence (T28)**: RED (2 failing tests across `ImboxView.test.tsx` and `PaperTrailView.test.tsx`), then `npm run build && npm run lint && npx vitest run`: 207 passed, 18 files, 0 failed/skipped.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Per-group Imbox & Paper Trail bundle collapse + persistence (`BNDL-01`) | `src/features/imbox/ImboxView.test.tsx:55-60`, `src/features/paper-trail/PaperTrailView.test.tsx:121-126` | Collapses bundled sender emails into a single expandable row per Imbox group and in Paper Trail; persists `bundled: true` | Yes |
+| Expand newest-first, open inner email, and unbundle (`BNDL-02`) | `src/features/imbox/ImboxView.test.tsx:62-74`, `src/features/paper-trail/PaperTrailView.test.tsx:128-145` | Expands newest-first, opens individual bundled emails in `MailReader`, and unbundles back to individual rows | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `ImboxView.test.tsx:44-75` | `BNDL-01`, `BNDL-02` in Imbox groups | Yes |
+| `PaperTrailView.test.tsx:105-146` | `BNDL-01`, `BNDL-02` in Paper Trail | Yes |
+
 ---
+
 
 ## P2 Validation Tables (T24–T28)
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { selectPaperTrail } from '../../domain/triage'
 import { useAppState, useDispatch } from '../../state/AppStore'
-import { EmailRow, EmptyState, MailReader, ViewHeader } from '../common'
+import { EmailList, EmptyState, MailReader, ViewHeader } from '../common'
 import { useMailShortcuts } from '../common/useShortcuts'
 import styles from './PaperTrailView.module.css'
 
@@ -26,10 +26,10 @@ export function PaperTrailView() {
         {query.trim() && <button type="button" className={styles.clearBtn} onClick={() => setQuery('')}>Clear search</button>}
       </div>
       <div className={styles.list}>
-        {emails.length ? emails.map((email) => <EmailRow key={email.id} email={email} sender={state.senders[email.senderId]}
-          selected={selection.selectedId === email.id} onSelect={() => selection.select(email.id)} onOpen={() => {
+        {emails.length ? <EmailList emails={emails} selectedId={selection.selectedId}
+          onSelect={selection.select} onOpen={(email) => {
           dispatch({ type: 'OPEN_EMAIL', emailId: email.id }); setOpenId(email.id)
-        }} />) : allEmails.length ? <div className={styles.emptySearch}>
+        }} /> : allEmails.length ? <div className={styles.emptySearch}>
           <EmptyState title="No matching receipts" message={`Nothing in Paper Trail matched "${query.trim()}".`} />
         </div> : <EmptyState title="A clean paper trail" message="Receipts, orders, and confirmations will stack neatly here — out of your Imbox." />}
       </div>

@@ -27,6 +27,11 @@
 .action:hover { color: var(--purple); background: var(--purple-soft); border-color: #cbc1dd; }
 .rowActions .action { font-size: 18px; padding: 3px 7px; border-color: transparent; background: transparent; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.bundleRow { border-bottom: 1px solid #eeede8; background: #fcfbf7; }
+.bundleRow:last-child { border-bottom: 0; }
+.bundleCount { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--purple-soft); color: var(--purple); font-size: 10px; font-weight: 700; }
+.bundleChevron { font-size: 11px; color: var(--purple); }
+.bundleItems { border-top: 1px dashed #e6e3d8; padding-left: 18px; background: #faf8f1; }
 .reader { background: white; border: 1px solid var(--line); border-radius: 14px; padding: 30px; margin-bottom: 25px; box-shadow: 0 3px 15px #29282204; }
 .readerToolbar { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 25px; }
 .back { background: none; border: 0; color: var(--purple); padding: 6px 0; font-size: 12px; }
