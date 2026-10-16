@@ -37,48 +37,20 @@
 ## Handoff
 
 - **Feature**: hey-mail-reader (`.specs/features/hey-mail-reader/`)
-- **Phase / Task**: Execute complete. T1-T23 committed; independent
-  re-verification PASS; all five P1 manual workflows approved by the user.
-- **Completed**: T21 `edda10e` resolves Imbox reader eligibility through the
-  current selector. Approve → open → reset restores persisted seed, removes
-  pending mail from the reader, and returns the sender to Screener; ordinary
-  open → seen remains open.
-  T22 `613b0c2` validates raw bundled messages before sender dereference,
-  skips invalid/missing fields and unknown senders, preserves source-index IDs,
-  and logs/publishes diagnostics on first load, fallback and reset.
-  T23 `f4e2a03` carries the user's explicit most-recent-first choice into
-  REPLY-03 without changing behavior. Exact adequacy tables, gates, dependencies
-  and traceability are appended in `tasks.md` and recorded in `spec.md`.
+- **Phase / Task**: Execute complete (P1 + P2). T1–T28 committed; independent P1+P2 verification PASS (207 tests across 18 files, 6/6 discrimination mutations killed).
+- **Completed**:
+  - **P1 (`T1`–`T23`)**: Imbox, Screener, Reply Later + Focus & Reply, Set Aside, Feed, keyboard shortcuts, storage/schema resilience, and F1–F3 repairs.
+  - **P2 (`T24`–`T28`)**:
+    - `T24` (`ac0f194`): Added `Sender.bundled?: boolean`, `DisplayEntry`, and `SET_BUNDLE` action in `src/domain/types.ts`.
+    - `T25` (`fb6c202`): Routed approved `receipt` senders to `paperTrail` with `personal > receipt > newsletter` precedence, added `selectPaperTrail(state, query?)`, and enabled pile support for `paperTrail`.
+    - `T26` (`3cadcbf`): Added `SET_BUNDLE` reducer case, `selectDisplayEntries(state, emails)` bundle collapsing selector, and boolean `bundled` validation in `normalizeState()`.
+    - `T27` (`2cb7ec2`): Built `PaperTrailView` with real-time sender/address/subject search, clearable no-match state, `/paper-trail` route in `AppShell`, and `Return to Paper Trail` in `ReturnToBox`.
+    - `T28` (`4be27f0`): Added `BundleRow`, `EmailList`, and sender bundle toggle controls in `src/features/common/index.tsx`, wired into `ImboxView` (per group) and `PaperTrailView`.
 - **In-progress** (file:line): none
-- **Next step**: No pending P1 implementation. Await a new user request;
-  P2/P3 remain deferred. Run `npm run dev` to use the local prototype.
+- **Next step**: P1 and P2 are complete and verified. P3 (`BUBBLE-01`, `READ-01`, `SPY-01`) remains deferred until requested. Run `npm run dev` to explore the prototype.
 - **Blockers**: none
-- **Uncommitted files**: pre-existing `.github/` skill installation remains
-  intentionally outside implementation commits. Verification, lessons and
-  closure status are included in the closing documentation commit.
+- **Uncommitted files**: `.agents/` workspace skill customization remains intentionally untracked outside implementation commits (same as `.github/`).
 - **Branch**: master; local only, no push/deploy
-- **Gates**: T21 targeted 8, full 162; T22 targeted 111, full 192;
-  T23 targeted 38, final build + lint + all 192 tests passed (17 files,
-  zero failed/skipped). All original 161 tests unchanged; added 1 F1 test and
-  30 F2 cases. Test-first runs reproduced F1's stale reader and F2's import
-  crash. TypeScript caught a new guard narrowing error; corrected and full
-  gate rerun successfully. Task/spec validators pass; only the original three
-  build-only task warnings remain. Each commit message checked with
-  `check_commit.py`, with coauthor trailer.
-- **Seed/core contract**: `buildSeed()` returns validated `{state, diagnostics}`;
-  `buildSeedState()` and `seed` remain state-only helpers. Shared pure content
-  guards live in `src/domain/validation.ts`, avoiding dependency cycles.
-  `normalizeState` includes seed skip diagnostics in fallback results. Core
-  remains free of logging, React, DOM and storage.
-- **Reset/notice contract**: Store intercepts `RESET_SEED` at the event boundary,
-  invokes `repository.reset()` outside the reducer, and installs returned
-  state through pure internal `RESTORE_SEED`. The normal save effect also sees
-  restored state. Repository logs and publishes every seed skip; notices stay
-  nonblocking through `useAppNotices`. Other triage behavior is unchanged.
-- **Validation scope**: Independent report covers `2a7fdae..f4e2a03`,
-  23/23 P1 ACs and 5/5 edges. Build/lint and 192 tests passed without skips.
-  Three scratch mutations (stale reader, suppressed seed diagnostics, reversed
-  Focus order) were killed; scratch removed and real porcelain preserved.
-  `validate_state.py` passed. User subsequently approved Imbox, Screener,
-  Reply Later/Focus, Set Aside and Feed manual tests. Visual resemblance was
-  not separately evaluated. No assistant-owned helpers remain running.
+- **Gates**: Full build (`tsc -b && vite build`), ESLint (`eslint .`), and Vitest (`npx vitest run` -> 207 passed across 18 test files, 0 failed/skipped) all pass. Deterministic validators `validate_spec.py`, `validate_tasks.py`, and `validate_state.py` pass with 0 errors.
+- **Validation scope**: Independent P2 Verifier (`author != verifier`) verified HEAD `4be27f0`, 27/27 P1+P2 ACs (`IMBOX-01..05`, `SCRN-01..05`, `REPLY-01..05`, `ASIDE-01..04`, `FEED-01..04`, `PAPER-01..02`, `BNDL-01..02`), 5/5 edge cases, and killed 3/3 P2 mutations (`M4`–`M6`) in a disposable worktree (`/tmp/missiva-verifier-sensor`).
+

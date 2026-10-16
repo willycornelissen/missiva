@@ -267,10 +267,10 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | FEED-02 | P1: The Feed | T6 selector / T19 UI | Verified |
 | FEED-03 | P1: The Feed | T6 isolation / T19 UI | Verified |
 | FEED-04 | P1: The Feed | T6 selector / T19 UI | Verified |
-| PAPER-01 | P2: Paper Trail | T25 core + T27 UI complete | Implementing |
-| PAPER-02 | P2: Paper Trail | T25 core + T27 UI complete | Implementing |
-| BNDL-01 | P2: Bundles | T24 types + T26 core + T28 UI complete | Implementing |
-| BNDL-02 | P2: Bundles | T24 types + T26 core + T28 UI complete | Implementing |
+| PAPER-01 | P2: Paper Trail | T25 core + T27 UI | Verified |
+| PAPER-02 | P2: Paper Trail | T25 core + T27 UI | Verified |
+| BNDL-01 | P2: Bundles | T24 types + T26 core + T28 UI | Verified |
+| BNDL-02 | P2: Bundles | T24 types + T26 core + T28 UI | Verified |
 | BUBBLE-01 | P3: Bubble Up | - | Pending |
 | READ-01 | P3: Read Together | - | Pending |
 | SPY-01 | P3: Spy-pixel blocker | - | Pending |
@@ -279,7 +279,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; 23 P1 requirements Verified; 4 P2 requirements Implementing (T24–T28 complete, awaiting independent Verifier); 3 deferred P3 requirements Pending.
+**Coverage:** 30 total; 27 P1/P2 requirements Verified; 3 deferred P3 requirements Pending. Independent verification report: `.specs/features/hey-mail-reader/validation.md` (PASS, 207 tests, 6/6 mutations killed).
 
 **Execution history:** The entries below preserve each task's result at its
 commit; references to pending work are historical, superseded by the final
@@ -349,6 +349,7 @@ T23 resolves F3 with the user's explicit newest-first-by-received-time choice.
 The AC now matches the approved design and existing tests; behavior is unchanged.
 Final build + lint + all 192 tests passed (17 files, none failed/skipped).
 T21-T23 are complete; the orchestrator owns fresh independent re-verification.
+T24-T28 implement P2 Paper Trail (`PAPER-01`, `PAPER-02`) and Sender Bundles (`BNDL-01`, `BNDL-02`): receipt routing with `personal > receipt > newsletter` precedence, Paper Trail pile round-trip, real-time sender/address/subject search with clearable no-match state, and per-sender expandable bundles in Imbox groups and Paper Trail. Independent P2 Verifier (`author != verifier`) confirmed PASS across all 27 P1+P2 ACs, 207 tests (18 files), and 3/3 P2 discrimination mutations (`M4`–`M6`) killed in an isolated worktree.
 
 ---
 
