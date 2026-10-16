@@ -11,8 +11,8 @@ front-end prototype over realistic mock data.
 
 ## Goals
 
-- [ ] Reproduce HEY's signature triage model (Imbox / Feed / Screener) with its New-vs-Seen split in a single-user web prototype.
-- [ ] Deliver the five P1 interaction patterns (Imbox, Screener, Reply Later + Focus & Reply, Set Aside, Feed) each independently demoable over mock data.
+- [ ] Reproduce HEY's signature triage model (Imbox / Feed / Screener / Paper Trail) with its New-vs-Seen split in a single-user web prototype.
+- [ ] Deliver the five P1 interaction patterns (Imbox, Screener, Reply Later + Focus & Reply, Set Aside, Feed) and two P2 interaction patterns (Paper Trail, Bundles) each independently demoable over mock data.
 - [ ] Match HEY's visual language closely enough that a HEY user recognizes it (layout, density, states, piles docked at the bottom).
 
 ## Out of Scope
@@ -26,7 +26,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | Sending / composing / replying for real | Prototype has no transport; "Reply" affordances change local state only, they do not send mail. |
 | Backend, database, server persistence | Front-end only (React + Vite); state lives in memory/local-storage. |
 | Calendar, Journal, Contacts, Workflows, Collections, big-files, send-as | HEY sub-products unrelated to the reader MVP. |
-| Paper Trail, Bundles, Bubble Up, Read Together, Spy-pixel blocker | Deferred to P2/P3 (see User Stories), not part of P1. |
+| Bubble Up, Read Together, Spy-pixel blocker | Deferred to P3 (see User Stories), not part of P1/P2. |
 
 ---
 
@@ -43,11 +43,14 @@ Every ambiguity is resolved or recorded here — nothing is left silently unclea
 | Piles UI (Reply Later / Set Aside) | Docked tiles at the bottom-right of the screen showing a count; click expands the pile | Matches HEY's bottom-docked piles | y |
 | Screener decision model | First email from an unknown sender lands in The Screener; user picks Yes (→ Imbox) or No (→ screened-out); choice is remembered per sender | Core HEY Screener behavior | y |
 | New sender routing of newsletters | Newsletters from approved senders route to The Feed, not the Imbox | Matches HEY's Feed concept | y |
-| Keyboard shortcuts | Minimal set for P1: `j/k` move selection, `e` set aside, `r` reply-later, `y/n` screener decision | Keeps HEY's keyboard-first feel without a full shortcut system | y |
+| Receipt sender routing & precedence | Approved receipt senders route to Paper Trail (`personal > receipt > newsletter`); Paper Trail emails support Reply Later / Set Aside piles and return to Paper Trail | Matches HEY's Paper Trail and preserves personal-first priority | y |
+| Paper Trail search | Real-time case-insensitive trimmed substring filter over sender name, sender address, and email subject, with a dedicated empty-search state and clear control | Makes receipts immediately searchable by sender or subject | y |
+| Sender bundling scope & seed state | Per-sender `bundled: boolean` (default `false` in seed, persisted in `AppState`) collapses a sender's emails into one expandable row (newest-first when expanded) within each Imbox group (`New for you` / `Previously seen`) and in Paper Trail | Preserves Imbox New/Seen separation while letting users bundle noisy senders live | y |
+| Keyboard shortcuts | Minimal set for P1/P2: `j/k` move selection, `e` set aside, `r` reply-later, `y/n` screener decision | Keeps HEY's keyboard-first feel without a full shortcut system | y |
 | Animations/transitions | Subtle slide/fade when mail moves between piles/boxes; respect `prefers-reduced-motion` | HEY feels animated; accessibility guard required | y |
 | Mail body rendering | Render sanitized mock HTML/plain-text bodies; remote images shown inline (no spy-pixel blocking in P1) | Spy-pixel blocking is P3; sanitization still required for safety | y |
 | Empty states | Each box/pile shows a dedicated empty-state message and illustration placeholder | HEY uses friendly empty states; prevents blank screens | y |
-| Routing | Client-side routes: `/imbox`, `/feed`, `/screener`, `/reply-later`, `/set-aside` | Deep-linkable boxes aid demo and testing | y |
+| Routing | Client-side routes: `/imbox`, `/feed`, `/paper-trail`, `/screener`, `/reply-later`, `/set-aside` | Deep-linkable boxes aid demo and testing | y |
 
 **Open questions:** none — all resolved or logged above.
 
@@ -153,14 +156,14 @@ open, so that they don't crowd my Imbox.
 **User Story**: As a user, I want receipts and transactional emails in a separate Paper
 Trail, so that they stay out of my way but easy to find.
 
-**Why P2**: Valuable triage surface, but the Imbox/Feed/Screener trio already proves the model.
+**Why P2**: Valuable triage surface that separates receipts/transactional messages from personal mail and newsletters.
 
 **Acceptance Criteria**:
 
-1. WHEN an email is classified as a receipt or transactional message THEN the system SHALL route it to the Paper Trail.  <!-- event-driven -->
-2. The system SHALL make Paper Trail emails searchable by sender and subject.  <!-- ubiquitous -->
+1. WHEN an approved sender is classified as a receipt without personal classification THEN the system SHALL route its emails to the Paper Trail instead of the Imbox or Feed.  <!-- event-driven -->
+2. The system SHALL make Paper Trail emails searchable case-insensitively by sender name, sender email address, and subject, showing a dedicated empty state when no emails match.  <!-- ubiquitous -->
 
-**Independent Test**: Seeded receipts appear only in the Paper Trail and can be found by search.
+**Independent Test**: Seeded receipts (`North Rail` and `Corner Bookshop`) appear only in the Paper Trail (`/paper-trail`), can be filtered by sender or subject (with a clearable empty-search state), and can round-trip through Reply Later / Set Aside back to Paper Trail.
 
 ---
 
@@ -169,14 +172,14 @@ Trail, so that they stay out of my way but easy to find.
 **User Story**: As a user, I want to bundle a dominating sender's emails into one row, so
 that a noisy sender takes up minimal space.
 
-**Why P2**: Enhances the Imbox but isn't needed to demonstrate the core triage model.
+**Why P2**: Enhances the Imbox and Paper Trail by collapsing multi-email senders without losing New/Seen separation.
 
 **Acceptance Criteria**:
 
-1. WHEN the user bundles a sender THEN the system SHALL collapse that sender's emails into a single expandable row.  <!-- event-driven -->
-2. WHEN the user expands a bundle THEN the system SHALL list that sender's emails newest first.  <!-- event-driven -->
+1. WHEN the user bundles a sender THEN the system SHALL persist that sender's bundled state and collapse that sender's emails into a single expandable row within each Imbox group ("New for you" and "Previously seen") and in the Paper Trail.  <!-- event-driven -->
+2. WHEN the user expands a bundle THEN the system SHALL list that sender's emails in that group newest first by received time and allow unbundling or individual email actions.  <!-- event-driven -->
 
-**Independent Test**: Bundle a seeded high-volume sender and confirm it collapses to one expandable row.
+**Independent Test**: Bundle a seeded high-volume sender in the Imbox or Paper Trail, confirm its emails collapse to one expandable row per group, expand it to see emails ordered newest first, and confirm the bundled choice persists across reloads.
 
 ---
 
@@ -231,7 +234,7 @@ spy on my opens.
 - IF an email body contains unsafe HTML THEN the system SHALL sanitize it before rendering.  <!-- unwanted-behavior -->
 - WHEN the same email is targeted by two conflicting piles (Reply Later and Set Aside) THEN the system SHALL keep it in the most recently chosen pile only.  <!-- event-driven -->
 - IF `localStorage` is unavailable or full THEN the system SHALL run from the in-memory seed and warn that triage will not persist.  <!-- unwanted-behavior -->
-- WHEN a sender appears in both newsletter and personal classifications THEN the system SHALL treat it as personal (Imbox) by default.  <!-- event-driven -->
+- WHEN a sender has multiple classifications THEN the system SHALL route by precedence `personal > receipt > newsletter` (`imbox` > `paperTrail` > `feed`).  <!-- event-driven -->
 
 ---
 
@@ -264,10 +267,10 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | FEED-02 | P1: The Feed | T6 selector / T19 UI | Verified |
 | FEED-03 | P1: The Feed | T6 isolation / T19 UI | Verified |
 | FEED-04 | P1: The Feed | T6 selector / T19 UI | Verified |
-| PAPER-01 | P2: Paper Trail | - | Pending |
-| PAPER-02 | P2: Paper Trail | - | Pending |
-| BNDL-01 | P2: Bundles | - | Pending |
-| BNDL-02 | P2: Bundles | - | Pending |
+| PAPER-01 | P2: Paper Trail | T25 core / T27 UI | In Tasks |
+| PAPER-02 | P2: Paper Trail | T25 core / T27 UI | In Tasks |
+| BNDL-01 | P2: Bundles | T24 types complete / T26 core / T28 UI | Implementing |
+| BNDL-02 | P2: Bundles | T24 types complete / T26 core / T28 UI | Implementing |
 | BUBBLE-01 | P3: Bubble Up | - | Pending |
 | READ-01 | P3: Read Together | - | Pending |
 | SPY-01 | P3: Spy-pixel blocker | - | Pending |
@@ -276,11 +279,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; all 23 P1 requirements independently Verified with core,
-persistence and UI evidence; 7 deferred P2/P3 requirements remain pending.
-See `validation.md`: build/lint and 192 tests pass; 3/3 mutations killed.
-The user approved all five P1 manual workflows. Subjective visual resemblance
-was not separately evaluated. Task-local evidence remains in `tasks.md`.
+**Coverage:** 30 total; 23 P1 requirements Verified; 4 P2 requirements mapped to T24–T28 (T24 complete); 3 deferred P3 requirements Pending.
 
 **Execution history:** The entries below preserve each task's result at its
 commit; references to pending work are historical, superseded by the final

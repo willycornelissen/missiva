@@ -11,6 +11,7 @@ export interface Sender {
   address: string
   kind: SenderKind | SenderKind[]
   decision: SenderDecision
+  bundled?: boolean
 }
 
 export type BoxKind = 'imbox' | 'feed' | 'screener' | 'paperTrail' | 'screenedOut'
@@ -29,6 +30,10 @@ export interface Email {
   originBox: BoxKind
 }
 
+export type DisplayEntry =
+  | { kind: 'email'; email: Email; sender: Sender }
+  | { kind: 'bundle'; sender: Sender; emails: Email[]; latest: Email }
+
 export interface AppState {
   schemaVersion: number
   senders: Record<SenderId, Sender>
@@ -44,6 +49,7 @@ export type TriageAction =
   | { type: 'REPLY_LATER'; emailId: EmailId }
   | { type: 'SET_ASIDE'; emailId: EmailId }
   | { type: 'REMOVE_FROM_PILE'; emailId: EmailId }
+  | { type: 'SET_BUNDLE'; senderId: SenderId; bundled: boolean }
   | { type: 'FOCUS_REPLY_START' }
   | { type: 'FOCUS_REPLY_NEXT' }
   | { type: 'FOCUS_REPLY_EXIT' }

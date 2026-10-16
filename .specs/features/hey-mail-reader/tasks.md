@@ -1370,3 +1370,184 @@ pending, not a feature-level PASS.
 Adequacy A-D passed: the user resolves the precision gap; existing exact
 assertions now match the AC rather than design alone. No duplicate tests or
 unclaimed assertions added; AD-004 and original co-location retained.
+
+---
+
+## P2 Implementation Plan (Paper Trail & Bundles)
+
+### Phase 6: P2 Paper Trail & Bundles
+
+```text
+T24 → T25 → T26 → T27 → T28
+```
+
+### T24: Extend domain types for sender bundling and display entries
+
+**What**: Add optional `bundled?: boolean` to `Sender`, `DisplayEntry` union (`email` | `bundle`), and `SET_BUNDLE` action to `TriageAction`.
+**Where**: `src/domain/types.ts`
+**Depends on**: T23
+**Reuses**: `src/domain/types.ts`
+**Requirement**: BNDL-01, BNDL-02
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [x] `Sender.bundled?: boolean`, `DisplayEntry`, and `SET_BUNDLE` are exported from `src/domain/types.ts`
+- [x] Gate check passes: `npm run build && npm run lint && npm test`
+
+**Tests**: none
+**Gate**: build
+
+**Commit**: `feat(domain): add bundle action and display entry types`
+
+**Execution evidence (T24)**: Build + ESLint + Vitest passed (192 tests across 17 files, 0 failed/skipped). `Sender.bundled?: boolean`, `DisplayEntry`, and `SET_BUNDLE` exported from `src/domain/types.ts:14,31-33,45`. Adequacy A-D: types-only task covered by build gate per Test Coverage Matrix; no tests weakened, skipped, or deleted.
+
+---
+
+### T25: Implement Paper Trail routing, search selector, and pile support in core and seed
+
+**What**: Route approved `receipt` senders (without `personal`) to `paperTrail` in `triage.ts` and `seed.ts` (`personal > receipt > newsletter`), support `paperTrail` in `selectPile`/`putInPile`, and add `selectPaperTrail(state, query?)` matching sender name, sender address, and subject case-insensitively.
+**Where**: `src/domain/triage.ts`
+**Depends on**: T24
+**Reuses**: `src/domain/triage.ts`, `src/data/seed.ts`
+**Requirement**: PAPER-01, PAPER-02
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [ ] Approved receipt senders route to `paperTrail` (`PAPER-01`) with `personal > receipt > newsletter` precedence
+- [ ] `selectPaperTrail(state, query?)` returns approved non-piled `paperTrail` emails newest-first and filters case-insensitively by sender name, sender address, and subject (`PAPER-02`)
+- [ ] Paper Trail emails can enter `replyLater`/`setAside` and return to `paperTrail` on `REMOVE_FROM_PILE` or `FOCUS_REPLY_NEXT`
+- [ ] Gate check passes: `npm test`
+- [ ] Unit tests in `src/domain/triage.test.ts`, `src/domain/normalize.test.ts`, and `src/data/seed.test.ts` cover `PAPER-01`, `PAPER-02`, multi-kind precedence, and pile round-trip
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(triage): add paper trail routing, search selector, and pile support`
+
+---
+
+### T26: Implement sender bundling reducer, display-entry selector, and normalization guard
+
+**What**: Add `SET_BUNDLE` handling in `reduce()`, `selectDisplayEntries(state, emails)` collapsing bundled senders' emails into a single entry with newest-first inner emails, and boolean validation for `sender.bundled` in `normalizeState()`.
+**Where**: `src/domain/triage.ts`
+**Depends on**: T25
+**Reuses**: `src/domain/triage.ts`
+**Requirement**: BNDL-01, BNDL-02
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [ ] `SET_BUNDLE` updates `sender.bundled` immutably (`BNDL-01`)
+- [ ] `selectDisplayEntries(state, emails)` collapses each bundled sender's emails in a slice into one `bundle` entry positioned at its newest email, with `emails` ordered newest-first (`BNDL-01`, `BNDL-02`)
+- [ ] `normalizeState()` preserves boolean `sender.bundled` and rejects non-boolean `bundled` values as malformed senders
+- [ ] Gate check passes: `npm test`
+- [ ] Unit tests in `src/domain/triage.test.ts` and `src/domain/normalize.test.ts` cover `BNDL-01`, `BNDL-02`, and `bundled` normalization
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(triage): add sender bundling reducer and display entry selector`
+
+---
+
+### T27: Build Paper Trail view and wire `/paper-trail` route
+
+**What**: Create `PaperTrailView` with sender/subject search input, clear-search control, dedicated empty states (empty Paper Trail vs. no search results), reader integration, keyboard shortcuts, and `/paper-trail` navigation in `AppShell` + `Return to Paper Trail` label in `ReturnToBox`.
+**Where**: `src/features/paper-trail/PaperTrailView.tsx`
+**Depends on**: T26
+**Reuses**: `src/features/common/index.tsx`, `src/app/AppShell.tsx`
+**Requirement**: PAPER-01, PAPER-02
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [ ] `/paper-trail` route is navigable in `AppShell` with live sidebar count and displays seeded receipt emails newest-first (`PAPER-01`)
+- [ ] Search input filters Paper Trail emails by sender name, sender address, and subject case-insensitively and shows a dedicated clearable empty state when no emails match (`PAPER-02`)
+- [ ] Opening a receipt renders sanitized body in `MailReader`; moving to a pile and clicking `Return to Paper Trail` restores it to `/paper-trail`
+- [ ] Gate check passes: `npm test`
+- [ ] Component tests in `src/features/paper-trail/PaperTrailView.test.tsx` and `src/app/AppShell.test.tsx` cover routing, search, empty states, and pile return
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(paper-trail): add paper trail view, search, and route wiring`
+
+---
+
+### T28: Add expandable bundle rows and bundle toggle controls in Imbox and Paper Trail
+
+**What**: Add `BundleRow` and `EmailList` in `src/features/common/index.tsx`, add `Bundle sender` / `Unbundle sender` toggle controls, and render grouped display entries in `ImboxView` (per `New for you` / `Previously seen` group) and `PaperTrailView`.
+**Where**: `src/features/common/index.tsx`
+**Depends on**: T27
+**Reuses**: `src/features/imbox/ImboxView.tsx`, `src/features/paper-trail/PaperTrailView.tsx`
+**Requirement**: BNDL-01, BNDL-02
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [ ] Bundling a sender collapses its emails into a single expandable row within each Imbox group (`New for you`, `Previously seen`) and in Paper Trail, and persists to storage (`BNDL-01`)
+- [ ] Expanding a bundle row lists that sender's emails newest-first and allows opening individual emails or unbundling the sender (`BNDL-02`)
+- [ ] Gate check passes: `npm run build && npm run lint && npm test`
+- [ ] Component tests in `src/features/imbox/ImboxView.test.tsx` and `src/features/paper-trail/PaperTrailView.test.tsx` cover collapsing, expanding newest-first, persistence across reload, and unbundling
+
+**Tests**: unit
+**Gate**: build
+
+**Commit**: `feat(bundles): add expandable sender bundle rows to imbox and paper trail`
+
+---
+
+## P2 Validation Tables (T24–T28)
+
+### P2 Task Granularity Check
+
+| Task | Scope | Status |
+| ---- | ----- | ------ |
+| T24: Bundle & display entry types | 1 file (`types.ts`) | ✅ Granular |
+| T25: Paper Trail core & seed routing | Core selector/routing + seed | ✅ Granular |
+| T26: Bundle core reducer & selector | Core reducer/selector/guard | ✅ Granular |
+| T27: Paper Trail view & route | 1 view + route link | ✅ Granular |
+| T28: Bundle UI rows & toggles | Shared bundle row + view wiring | ✅ Granular |
+
+### P2 Diagram-Definition Cross-Check
+
+| Task | Depends On (task body) | Diagram Shows | Status |
+| ---- | ---------------------- | ------------- | ------ |
+| T24 | T23 (Phase 5) | Cross-phase start of Phase 6 | ✅ Match |
+| T25 | T24 | T24 → T25 | ✅ Match |
+| T26 | T25 | T25 → T26 | ✅ Match |
+| T27 | T26 | T26 → T27 | ✅ Match |
+| T28 | T27 | T27 → T28 | ✅ Match |
+
+### P2 Test Co-location Validation
+
+| Task | Code Layer | Matrix Requires | Task Says | Status |
+| ---- | ---------- | --------------- | --------- | ------ |
+| T24 | Types | none (build gate) | none | ✅ OK |
+| T25 | Triage core | unit | unit | ✅ OK |
+| T26 | Triage core | unit | unit | ✅ OK |
+| T27 | Feature view | unit | unit | ✅ OK |
+| T28 | Components / views | unit | unit | ✅ OK |
+

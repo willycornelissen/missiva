@@ -73,7 +73,7 @@ No existing code to reuse — the project is empty. This design sets the convent
 
 ### Domain Models (`src/domain/types.ts`)
 
-- **Purpose**: Canonical TypeScript types for emails, senders, decisions, piles, and app state.
+- **Purpose**: Canonical TypeScript types for emails, senders, decisions, piles, bundles, and app state.
 - **Location**: `src/domain/types.ts`
 - **Interfaces**: type definitions only (see Data Models below).
 - **Dependencies**: none.
@@ -81,17 +81,19 @@ No existing code to reuse — the project is empty. This design sets the convent
 
 ### Triage Core (`src/domain/triage.ts`)
 
-- **Purpose**: Pure reducers + selectors implementing all triage rules from the spec.
+- **Purpose**: Pure reducers + selectors implementing all P1 and P2 triage rules from the spec.
 - **Location**: `src/domain/triage.ts`
 - **Interfaces**:
-  - `reduce(state: AppState, action: TriageAction): AppState` — single entry reducer
+  - `reduce(state: AppState, action: TriageAction): AppState` — single entry reducer (includes `SET_BUNDLE`)
   - `selectImbox(state): { newForYou: Email[]; previouslySeen: Email[] }`
   - `selectFeed(state): Email[]`
+  - `selectPaperTrail(state, query?: string): Email[]` — approved receipt mail newest-first, filtered case-insensitively by sender name, sender address, or subject (`PAPER-01`, `PAPER-02`)
+  - `selectDisplayEntries(state, emails: Email[]): DisplayEntry[]` — collapses bundled senders' emails in a given slice into a single expandable bundle entry positioned at the newest email, with emails inside ordered newest-first (`BNDL-01`, `BNDL-02`)
   - `selectScreener(state): Sender[]`
-  - `selectPile(state, pile: PileKind): Email[]`
-  - `routeIncoming(state, email): AppState` — applies screening/classification rules
+  - `selectPile(state, pile: PileKind): Email[]` — includes approved `imbox`, `feed`, and `paperTrail` emails assigned to `pile`
+  - `routeIncoming(state, email): AppState` — applies screening and `personal > receipt > newsletter` classification precedence
   - `selectFocusReply(state): Email | null` — one active reply
-  - `normalizeState(input: unknown): NormalizationResult` — validated state plus diagnostics
+  - `normalizeState(input: unknown): NormalizationResult` — validated state plus diagnostics (validates optional boolean `sender.bundled` and repairs `paperTrail` routing)
 - **Dependencies**: Domain Models and the pure static seed factory for reset/fallback.
 - **Reuses**: none.
 
@@ -110,6 +112,7 @@ No existing code to reuse — the project is empty. This design sets the convent
   IDs/timestamps use the original source index, not a filtered-array index.
   State-only helpers remain pure; repository load/reset use `buildSeed()` and
   normalization fallback includes seed diagnostics.
+- **P2 clarification**: Approved `receipt` senders (`rail`, `bookshop`) route to `box: 'paperTrail'` and `originBox: 'paperTrail'`. All senders start unbundled (`bundled` omitted / `false`).
 
 ### Storage Repository (`src/data/repository.ts`)
 
@@ -175,21 +178,22 @@ No existing code to reuse — the project is empty. This design sets the convent
 ### App Shell & Routing (`src/app/`)
 
 - **Purpose**: Layout shell (sidebar nav, main pane, bottom-docked piles) + client routes.
-- **Location**: `src/app/AppShell.tsx`, `src/app/routes.tsx`
-- **Interfaces**: route table for `/imbox`, `/feed`, `/screener`, `/reply-later`, `/set-aside`.
+- **Location**: `src/app/AppShell.tsx`
+- **Interfaces**: route table for `/imbox`, `/feed`, `/paper-trail`, `/screener`, `/reply-later`, `/set-aside`.
 - **Dependencies**: `react-router-dom`, AppStore, feature views.
 - **Reuses**: none.
 
 ### Feature Views (`src/features/*`)
 
-- **Purpose**: One view per P1 surface, each reading selectors and dispatching actions.
+- **Purpose**: One view per P1/P2 surface, each reading selectors and dispatching actions.
 - **Location**:
-  - `src/features/imbox/ImboxView.tsx` (New/Seen groups, email rows, open-to-seen)
+  - `src/features/imbox/ImboxView.tsx` (New/Seen groups, bundle rows + email rows, open-to-seen)
+  - `src/features/paper-trail/PaperTrailView.tsx` (receipts list, search by sender/subject, bundle rows + email rows, reader)
   - `src/features/screener/ScreenerView.tsx` (Yes/No decisions)
-  - `src/features/reply-later/ReplyLaterPile.tsx` + `FocusReplyMode.tsx`
-  - `src/features/set-aside/SetAsidePile.tsx`
+  - `src/features/reply-later/ReplyLater.tsx` (pile + Focus & Reply stepper)
+  - `src/features/set-aside/SetAside.tsx`
   - `src/features/feed/FeedView.tsx`
-  - `src/features/common/` (EmailRow, EmptyState, PileDock, Shortcuts)
+  - `src/features/common/` (`EmailRow`, `BundleRow`, `EmailList`, `MailActions`, `ReturnToBox`, `EmptyState`, `PileDock`, `useShortcuts`)
 - **Dependencies**: AppStore selectors/actions, Sanitizer.
 - **Reuses**: shared common components.
 
@@ -197,7 +201,7 @@ No existing code to reuse — the project is empty. This design sets the convent
 
 - **Purpose**: Bind `j/k/e/r/y/n` to selection and triage actions.
 - **Location**: `src/features/common/useShortcuts.ts`
-- **Interfaces**: `useShortcuts(handlers)`.
+- **Interfaces**: `useShortcuts(handlers)`, `useMailShortcuts(emails, openedId, onClose)`.
 - **Dependencies**: AppStore dispatch.
 - **Reuses**: none.
 
@@ -205,15 +209,15 @@ No existing code to reuse — the project is empty. This design sets the convent
 
 ## Data Models
 
-**Execution clarifications (T2)**:
+**Execution clarifications (T2 & P2)**:
 - SPEC_DEVIATION: `Sender.kind` accepts one kind or an array of kinds. The spec's
-  dual-classification edge cannot be represented by the original single literal.
-  Personal wins over newsletter.
+  multi-classification edge cannot be represented by the original single literal.
+  Precedence is `personal > receipt > newsletter` (`imbox` > `paperTrail` > `feed`).
 - SPEC_DEVIATION: `BoxKind` includes `screener`; pending mail needs a real location
   distinct from rejected mail.
-- SPEC_DEVIATION: approved receipts use Imbox in P1. `paperTrail` remains a
-  reserved type, not an implemented route. This avoids hiding demo receipts behind
-  a deferred P2 UI and follows P1's approved-sender Imbox/newsletter Feed rule.
+- P2 update (supersedes T2's P1-only receipt note): approved `receipt` senders
+  without `personal` now route to `paperTrail` (`PAPER-01`). `Sender` adds
+  optional `bundled?: boolean` (`BNDL-01`), defaulting to `false` when omitted.
 - Focus & Reply processes remaining replies newest-first, matching the pile list.
   Finishing clears `pile`, marks the email seen, and restores `originBox`.
   SPEC_DEVIATION: cursor stays at `0` after a finished item is removed from the
@@ -240,12 +244,17 @@ interface Sender {
   id: SenderId
   name: string
   address: string
-  kind: SenderKind
+  kind: SenderKind | SenderKind[]
   decision: SenderDecision
+  bundled?: boolean
 }
 
-type BoxKind = 'imbox' | 'feed' | 'paperTrail' | 'screenedOut'
+type BoxKind = 'imbox' | 'feed' | 'screener' | 'paperTrail' | 'screenedOut'
 type PileKind = 'replyLater' | 'setAside'
+
+type DisplayEntry =
+  | { kind: 'email'; email: Email; sender: Sender }
+  | { kind: 'bundle'; sender: Sender; emails: Email[]; latest: Email }
 
 interface Email {
   id: EmailId
@@ -274,6 +283,7 @@ type TriageAction =
   | { type: 'REPLY_LATER'; emailId: EmailId }
   | { type: 'SET_ASIDE'; emailId: EmailId }
   | { type: 'REMOVE_FROM_PILE'; emailId: EmailId }
+  | { type: 'SET_BUNDLE'; senderId: SenderId; bundled: boolean }
   | { type: 'FOCUS_REPLY_START' }
   | { type: 'FOCUS_REPLY_NEXT' }
   | { type: 'FOCUS_REPLY_EXIT' }
@@ -281,9 +291,11 @@ type TriageAction =
 ```
 
 **Relationships**: `Email.senderId → Sender.id`. A sender's `decision` gates whether its
-emails appear in active boxes (SCRN-01..04). `kind` drives routing to `imbox` vs `feed`
-vs `paperTrail` (FEED-01, and P2 PAPER-01). `pile` dominates box docking for the
-bottom piles; `originBox` restores placement on removal (ASIDE-03).
+emails appear in active boxes (SCRN-01..04). `kind` drives routing to `imbox` vs `paperTrail`
+vs `feed` (`personal > receipt > newsletter`; FEED-01, PAPER-01). `sender.bundled` collapses
+that sender's emails within each Imbox group and in Paper Trail into a single expandable
+`DisplayEntry` whose inner `emails` are ordered newest-first (BNDL-01, BNDL-02). `pile`
+dominates box docking for the bottom piles; `originBox` restores placement on removal (ASIDE-03).
 
 ---
 
@@ -292,14 +304,16 @@ bottom piles; `originBox` restores placement on removal (ASIDE-03).
 ```mermaid
 stateDiagram-v2
     [*] --> Screener: sender.decision == pending
-    Screener --> Imbox: approve & kind=personal
-    Screener --> Feed: approve & kind=newsletter
-    Screener --> PaperTrail: approve & kind=receipt (P2)
+    Screener --> Imbox: approve & kind includes personal
+    Screener --> PaperTrail: approve & kind includes receipt (no personal)
+    Screener --> Feed: approve & kind == newsletter
     Screener --> ScreenedOut: reject
     Imbox --> ReplyLater: REPLY_LATER
     Imbox --> SetAside: SET_ASIDE
-    ReplyLater --> Imbox: REMOVE_FROM_PILE
-    SetAside --> Imbox: REMOVE_FROM_PILE
+    PaperTrail --> ReplyLater: REPLY_LATER
+    PaperTrail --> SetAside: SET_ASIDE
+    ReplyLater --> OriginBox: REMOVE_FROM_PILE / FOCUS_REPLY_NEXT
+    SetAside --> OriginBox: REMOVE_FROM_PILE
     Imbox --> Imbox: OPEN_EMAIL (seen=true)
 ```
 
