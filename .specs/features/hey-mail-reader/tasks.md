@@ -1513,18 +1513,33 @@ Adequacy A-D passed: exact state/payload assertions, all tests mapped to `PAPER-
 
 **Done when**:
 
-- [ ] `/paper-trail` route is navigable in `AppShell` with live sidebar count and displays seeded receipt emails newest-first (`PAPER-01`)
-- [ ] Search input filters Paper Trail emails by sender name, sender address, and subject case-insensitively and shows a dedicated clearable empty state when no emails match (`PAPER-02`)
-- [ ] Opening a receipt renders sanitized body in `MailReader`; moving to a pile and clicking `Return to Paper Trail` restores it to `/paper-trail`
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests in `src/features/paper-trail/PaperTrailView.test.tsx` and `src/app/AppShell.test.tsx` cover routing, search, empty states, and pile return
+- [x] `/paper-trail` route is navigable in `AppShell` with live sidebar count and displays seeded receipt emails newest-first (`PAPER-01`)
+- [x] Search input filters Paper Trail emails by sender name, sender address, and subject case-insensitively and shows a dedicated clearable empty state when no emails match (`PAPER-02`)
+- [x] Opening a receipt renders sanitized body in `MailReader`; moving to a pile and clicking `Return to Paper Trail` restores it to `/paper-trail`
+- [x] Gate check passes: `npm test`
+- [x] Component tests in `src/features/paper-trail/PaperTrailView.test.tsx` and `src/app/AppShell.test.tsx` cover routing, search, empty states, and pile return
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(paper-trail): add paper trail view, search, and route wiring`
 
+**Execution evidence (T27)**: RED (4 failing tests across `PaperTrailView.test.tsx` and `AppShell.test.tsx`), then `npx vitest run src/features/paper-trail/PaperTrailView.test.tsx src/app/AppShell.test.tsx`: 5 passed, 0 failed.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| `/paper-trail` route, count, newest-first order (`PAPER-01`) | `src/features/paper-trail/PaperTrailView.test.tsx:22-28`, `:99-101`, `src/app/AppShell.test.tsx:16-19` | Navigable Paper Trail route with live sidebar count, newest-first list, and Screener approval routing | Yes |
+| Real-time search & no-match clearable state (`PAPER-02`) | `src/features/paper-trail/PaperTrailView.test.tsx:55-73` | Filters by sender name, sender address, and subject; shows `No matching receipts` and clears via `Clear search` | Yes |
+| Sanitized reader & pile round-trip | `src/features/paper-trail/PaperTrailView.test.tsx:30-41` | Sanitized HTML in `MailReader`, `Return to Paper Trail` restores receipt | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `PaperTrailView.test.tsx:22-41,94-101` | `PAPER-01` UI, reader, and pile return | Yes |
+| `PaperTrailView.test.tsx:55-73` | `PAPER-02` search and empty states | Yes |
+| `AppShell.test.tsx:16-19` | `/paper-trail` shell navigation | Yes |
+
 ---
+
 
 ### T28: Add expandable bundle rows and bundle toggle controls in Imbox and Paper Trail
 

@@ -1,6 +1,6 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import type { MailRepository } from '../data/repository'
-import { selectFeed, selectImbox, selectPile, selectScreener } from '../domain/triage'
+import { selectFeed, selectImbox, selectPaperTrail, selectPile, selectScreener } from '../domain/triage'
 import { AppStoreProvider, useAppState, useDispatch } from '../state/AppStore'
 import { PileDock } from '../features/common'
 import { NoticeBanner } from '../features/common/NoticeBanner'
@@ -9,6 +9,7 @@ import { ScreenerView } from '../features/screener/ScreenerView'
 import { ReplyLater } from '../features/reply-later/ReplyLater'
 import { SetAside } from '../features/set-aside/SetAside'
 import { FeedView } from '../features/feed/FeedView'
+import { PaperTrailView } from '../features/paper-trail/PaperTrailView'
 import styles from './AppShell.module.css'
 
 export function AppShell({ repository }: { repository?: MailRepository }) {
@@ -21,6 +22,7 @@ function Layout() {
   const navigation = [
     { path: '/imbox', title: 'The Imbox', icon: '✉', count: selectImbox(state).newForYou.length },
     { path: '/feed', title: 'The Feed', icon: '▤', count: selectFeed(state).length },
+    { path: '/paper-trail', title: 'Paper Trail', icon: '🧾', count: selectPaperTrail(state).length },
     { path: '/screener', title: 'The Screener', icon: '◈', count: selectScreener(state).length },
     { path: '/reply-later', title: 'Reply Later', icon: '↩', count: selectPile(state, 'replyLater').length },
     { path: '/set-aside', title: 'Set Aside', icon: '▱', count: selectPile(state, 'setAside').length },
@@ -61,6 +63,7 @@ function Layout() {
           <Route path="/reply-later" element={<ReplyLater />} />
           <Route path="/set-aside" element={<SetAside />} />
           <Route path="/feed" element={<FeedView />} />
+          <Route path="/paper-trail" element={<PaperTrailView />} />
           <Route path="*" element={<Navigate to="/imbox" replace />} />
         </Routes>
       </main>

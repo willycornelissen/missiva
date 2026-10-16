@@ -13,7 +13,7 @@ describe('mailbox shell', () => {
       getItem: () => JSON.stringify(buildSeedState()), setItem: () => {},
     }))} /></MemoryRouter>)
     const nav = screen.getByRole('navigation', { name: 'Mailbox' })
-    for (const title of ['The Feed', 'The Screener', 'Reply Later', 'Set Aside', 'The Imbox']) {
+    for (const title of ['The Feed', 'Paper Trail', 'The Screener', 'Reply Later', 'Set Aside', 'The Imbox']) {
       await user.click(within(nav).getByRole('link', { name: new RegExp(title) }))
       expect(screen.getByRole('heading', { level: 1, name: title })).toBeVisible()
       expect(within(nav).getByRole('link', { name: new RegExp(title) })).toHaveAttribute('aria-current', 'page')

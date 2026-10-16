@@ -42,7 +42,7 @@ export function MailActions({ email, compact = false, onDone }: { email: Email; 
 
 export function ReturnToBox({ email, onDone }: { email: Email; onDone?: () => void }) {
   const dispatch = useDispatch()
-  const destination = email.originBox === 'feed' ? 'Feed' : 'Imbox'
+  const destination = email.originBox === 'feed' ? 'Feed' : email.originBox === 'paperTrail' ? 'Paper Trail' : 'Imbox'
   return <button className={styles.action} aria-label={`Return to ${destination}: ${email.subject}`}
     onClick={() => { dispatch({ type: 'REMOVE_FROM_PILE', emailId: email.id }); onDone?.() }}>↗ Return to {destination}</button>
 }
