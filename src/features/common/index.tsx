@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Email, Sender } from '../../domain/types'
 import { selectDisplayEntries, selectPile } from '../../domain/triage'
-import { sanitizeHtml } from '../../lib/sanitize'
+import { detectTrackingPixels, sanitizeHtml } from '../../lib/sanitize'
 import { useAppState, useDispatch } from '../../state/AppStore'
 import styles from './Common.module.css'
 
@@ -15,13 +15,14 @@ export function EmailRow({ email, sender, onOpen, selected = false, onSelect, ch
   email: Email; sender: Sender; onOpen: () => void; selected?: boolean; onSelect?: () => void
   checked?: boolean; onToggleSelect?: () => void
 }) {
+  const hasTracker = detectTrackingPixels(email.bodyHtml) > 0
   return <article aria-label={email.subject} data-mail-id={email.id} data-selected={selected}
     className={`${styles.row} ${email.seen ? styles.seen : ''}`} onFocus={onSelect}>
     {onToggleSelect && <input type="checkbox" className={styles.selectCheck}
       aria-label={`Select ${email.subject}`} checked={checked} onChange={onToggleSelect} />}
     <button className={styles.openRow} onClick={onOpen} aria-label={`Open ${email.subject}`}>
       <Avatar sender={sender} />
-      <span className={styles.rowContent}><span className={styles.sender}>{sender.name}</span>
+      <span className={styles.rowContent}><span className={styles.sender}>{sender.name}{hasTracker && <span className={styles.trackerBadge}>Tracker flagged</span>}</span>
         <span className={styles.subject}>{email.subject}</span>
         <span className={styles.snippet}>{email.snippet}</span>
       </span>
@@ -111,15 +112,20 @@ export function ReturnToBox({ email, onDone }: { email: Email; onDone?: () => vo
 }
 
 export function EmailBody({ email }: { email: Email }) {
-  return <div className={styles.body} data-testid="email-body" dangerouslySetInnerHTML={{ __html: sanitizeHtml(email.bodyHtml) }} />
+  const blockedPixels = detectTrackingPixels(email.bodyHtml)
+  return <>
+    {blockedPixels > 0 && <div className={styles.spyNotice} role="status"><span aria-hidden="true">🛡</span> <strong>Spy pixel blocked</strong></div>}
+    <div className={styles.body} data-testid="email-body" dangerouslySetInnerHTML={{ __html: sanitizeHtml(email.bodyHtml) }} />
+  </>
 }
 
 export function MailReader({ email, onClose }: { email: Email; onClose: () => void }) {
   const sender = useAppState().senders[email.senderId]
+  const hasTracker = detectTrackingPixels(email.bodyHtml) > 0
   return <section className={styles.reader} aria-label={`Reading ${email.subject}`}>
     <div className={styles.readerToolbar}><button className={styles.back} aria-label="Back to mail" onClick={onClose}>← Back to mail</button><MailActions email={email} onDone={onClose} /></div>
     <h2 className={styles.readerTitle}>{email.subject || '(No subject)'}</h2>
-    <div className={styles.senderDetail}><Avatar sender={sender} /><div><strong>{sender.name}</strong><span>{sender.address}</span></div>
+    <div className={styles.senderDetail}><Avatar sender={sender} /><div><strong>{sender.name}</strong>{hasTracker && <span className={styles.trackerBadge}>Tracker flagged</span>}<span>{sender.address}</span></div>
       <time dateTime={email.receivedAt}>{new Date(email.receivedAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</time></div>
     <EmailBody email={email} />
   </section>

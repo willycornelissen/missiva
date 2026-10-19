@@ -273,13 +273,13 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | BNDL-02 | P2: Bundles | T24 types + T26 core + T28 UI | Verified |
 | BUBBLE-01 | P3: Bubble Up | T29 core + T31 UI complete | Implementing |
 | READ-01 | P3: Read Together | T31 UI complete | Implementing |
-| SPY-01 | P3: Spy-pixel blocker | T30 sanitizer + seed complete / T32 UI | Implementing |
+| SPY-01 | P3: Spy-pixel blocker | T30 sanitizer + seed + T32 UI complete | Implementing |
 
 **ID format:** `[CATEGORY]-[NUMBER]` (e.g., `IMBOX-01`, `SCRN-03`).
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; 27 P1/P2 requirements Verified; 3 P3 requirements Implementing (T29–T31 complete).
+**Coverage:** 30 total; 27 P1/P2 requirements Verified; 3 P3 requirements Implementing (T29–T32 complete; awaiting Independent P3 Verifier).
 
 **Execution history:** The entries below preserve each task's result at its
 commit; references to pending work are historical, superseded by the final
@@ -350,6 +350,7 @@ The AC now matches the approved design and existing tests; behavior is unchanged
 Final build + lint + all 192 tests passed (17 files, none failed/skipped).
 T21-T23 are complete; the orchestrator owns fresh independent re-verification.
 T24-T28 implement P2 Paper Trail (`PAPER-01`, `PAPER-02`) and Sender Bundles (`BNDL-01`, `BNDL-02`): receipt routing with `personal > receipt > newsletter` precedence, Paper Trail pile round-trip, real-time sender/address/subject search with clearable no-match state, and per-sender expandable bundles in Imbox groups and Paper Trail. Independent P2 Verifier (`author != verifier`) confirmed PASS across all 27 P1+P2 ACs, 207 tests (18 files), and 3/3 P2 discrimination mutations (`M4`–`M6`) killed in an isolated worktree.
+T29-T32 implement P3 Bubble Up (`BUBBLE-01`), Read Together (`READ-01`), and Spy-pixel blocker (`SPY-01`). Full build + lint + 214 tests passed across 18 files; independent P3 verification remains pending.
 
 ---
 

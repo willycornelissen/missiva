@@ -1758,14 +1758,26 @@ T29 → T30 → T31 → T32
 
 **Done when**:
 
-- [ ] Opening an email with a tracking pixel blocks the pixel from the DOM, shows `Spy pixel blocked`, and flags the sender as `Tracker flagged` (`SPY-01`)
-- [ ] Gate check passes: `npm run build && npm run lint && npm test`
-- [ ] Component tests in `src/features/common/common.test.tsx` and `src/features/feed/FeedView.test.tsx` cover `SPY-01`
+- [x] Opening an email with a tracking pixel blocks the pixel from the DOM, shows `Spy pixel blocked`, and flags the sender as `Tracker flagged` (`SPY-01`)
+- [x] Gate check passes: `npm run build && npm run lint && npm test`
+- [x] Component tests in `src/features/common/common.test.tsx` and `src/features/feed/FeedView.test.tsx` cover `SPY-01`
 
 **Tests**: unit
 **Gate**: build
 
 **Commit**: `feat(privacy): flag tracker senders and show blocked spy pixel notice`
+
+**Execution evidence (T32)**: RED (2 failing tests across `common.test.tsx` and `FeedView.test.tsx`), then `npm run build && npm run lint && npx vitest run`: build + lint + 214 passed (18 files), 0 failed.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Spy pixel blocked & sender flagged in reader/row (`SPY-01`) | `src/features/common/common.test.tsx:65-74` `expect(body.innerHTML).toBe('<p>Tracked dispatch</p><img src="https://images.example/photo.png" alt="Photo">')`; `expect(screen.getByText('Spy pixel blocked')).toBeVisible()`; `expect(screen.getAllByText('Tracker flagged')).toHaveLength(2)` | Blocks pixel in MailReader, shows Spy pixel blocked notice, and flags sender | Yes |
+| Spy pixel blocked & sender flagged in Feed (`SPY-01`) | `src/features/feed/FeedView.test.tsx:55-65` `expect(within(feed).getByTestId('email-body').querySelector('img')).toBeNull()`; `expect(within(feed).getByText('Spy pixel blocked')).toBeVisible()`; `expect(within(feed).getByText('Tracker flagged')).toBeVisible()` | Blocks pixel and flags sender on expanded Feed cards | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `common.test.tsx:65-74` | `SPY-01` reader/row | Yes |
+| `FeedView.test.tsx:55-65` | `SPY-01` Feed | Yes |
 
 ---
 

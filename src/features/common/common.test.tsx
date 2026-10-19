@@ -61,4 +61,16 @@ describe('shared mail components', () => {
     expect(screen.getByText('maya@example.com')).toBeVisible()
     expect(screen.getByRole('heading', { name: 'Subject unsafe' })).toBeVisible()
   })
+
+  it('blocks tracking pixels in MailReader, shows Spy pixel blocked notice, and flags the sender (SPY-01)', () => {
+    const tracked = message('tracked', {
+      bodyHtml: '<p>Tracked dispatch</p><img src="https://pixel.tracker.example/open.gif?id=99" width="1" height="1" alt=""><img src="https://images.example/photo.png" alt="Photo">',
+    })
+    mount(<><EmailRow email={tracked} sender={mailbox().senders.maya} onOpen={() => {}} /><MailReader email={tracked} onClose={() => {}} /></>, [tracked])
+    const body = screen.getByTestId('email-body')
+    expect(body.innerHTML).toBe('<p>Tracked dispatch</p><img src="https://images.example/photo.png" alt="Photo">')
+    expect(screen.getByText('Spy pixel blocked')).toBeVisible()
+    expect(screen.getAllByText('Tracker flagged')).toHaveLength(2)
+  })
 })
+

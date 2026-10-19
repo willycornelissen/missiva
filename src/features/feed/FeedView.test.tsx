@@ -51,4 +51,17 @@ describe('The Feed', () => {
     expect(app.storedState().emails.reference).toEqual(newsletter('reference'))
     expect(screen.getByRole('link', { name: 'Set Aside, 0 emails' })).toBeVisible()
   })
+
+  it('blocks tracking pixels and flags tracker senders on expanded Feed cards (SPY-01)', () => {
+    const trackedNewsletter = {
+      ...newsletter('tracked-feed'),
+      bodyHtml: '<p>Newsletter body</p><img src="https://pixel.tracker.example/open.gif?id=feed-1" width="1" height="1" alt="">',
+    }
+    renderMailbox(mailbox([trackedNewsletter]), '/feed')
+    const feed = screen.getByRole('region', { name: 'Newsletter feed' })
+    expect(within(feed).getByTestId('email-body').querySelector('img')).toBeNull()
+    expect(within(feed).getByText('Spy pixel blocked')).toBeVisible()
+    expect(within(feed).getByText('Tracker flagged')).toBeVisible()
+  })
 })
+

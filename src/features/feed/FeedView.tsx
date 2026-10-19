@@ -1,4 +1,5 @@
 import { selectFeed } from '../../domain/triage'
+import { detectTrackingPixels } from '../../lib/sanitize'
 import { useAppState } from '../../state/AppStore'
 import { Avatar, EmailBody, EmptyState, MailActions, ViewHeader } from '../common'
 import { useMailShortcuts } from '../common/useShortcuts'
@@ -13,9 +14,10 @@ export function FeedView() {
     <section aria-label="Newsletter feed" className={styles.feed}>
       {emails.length ? emails.map((email) => {
         const sender = state.senders[email.senderId]
+        const hasTracker = detectTrackingPixels(email.bodyHtml) > 0
         return <article key={email.id} aria-label={email.subject} data-mail-id={email.id} className={styles.card}
           tabIndex={0} data-selected={selection.selectedId === email.id} onFocus={() => selection.select(email.id)}>
-          <header className={styles.header}><Avatar sender={sender} /><div><strong>{sender.name}</strong><p>{sender.address}</p></div>
+          <header className={styles.header}><Avatar sender={sender} /><div><strong>{sender.name}</strong>{hasTracker && <span>Tracker flagged</span>}<p>{sender.address}</p></div>
             <time dateTime={email.receivedAt}>{new Date(email.receivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</time></header>
           <h2 className={styles.subject}>{email.subject}</h2>
           <EmailBody email={email} />
@@ -25,3 +27,4 @@ export function FeedView() {
     </section>
   </>
 }
+
