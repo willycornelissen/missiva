@@ -271,15 +271,15 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | PAPER-02 | P2: Paper Trail | T25 core + T27 UI | Verified |
 | BNDL-01 | P2: Bundles | T24 types + T26 core + T28 UI | Verified |
 | BNDL-02 | P2: Bundles | T24 types + T26 core + T28 UI | Verified |
-| BUBBLE-01 | P3: Bubble Up | T29 core + T31 UI complete | Implementing |
-| READ-01 | P3: Read Together | T31 UI complete | Implementing |
-| SPY-01 | P3: Spy-pixel blocker | T30 sanitizer + seed + T32 UI complete | Implementing |
+| BUBBLE-01 | P3: Bubble Up | T29 core + T31 UI | Verified |
+| READ-01 | P3: Read Together | T31 UI | Verified |
+| SPY-01 | P3: Spy-pixel blocker | T30 sanitizer + seed + T32 UI | Verified |
 
 **ID format:** `[CATEGORY]-[NUMBER]` (e.g., `IMBOX-01`, `SCRN-03`).
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; 27 P1/P2 requirements Verified; 3 P3 requirements Implementing (T29–T32 complete; awaiting Independent P3 Verifier).
+**Coverage:** 30 total; 30 requirements Verified across P1 + P2 + P3 (0 Pending/Implementing).
 
 **Execution history:** The entries below preserve each task's result at its
 commit; references to pending work are historical, superseded by the final
@@ -350,7 +350,7 @@ The AC now matches the approved design and existing tests; behavior is unchanged
 Final build + lint + all 192 tests passed (17 files, none failed/skipped).
 T21-T23 are complete; the orchestrator owns fresh independent re-verification.
 T24-T28 implement P2 Paper Trail (`PAPER-01`, `PAPER-02`) and Sender Bundles (`BNDL-01`, `BNDL-02`): receipt routing with `personal > receipt > newsletter` precedence, Paper Trail pile round-trip, real-time sender/address/subject search with clearable no-match state, and per-sender expandable bundles in Imbox groups and Paper Trail. Independent P2 Verifier (`author != verifier`) confirmed PASS across all 27 P1+P2 ACs, 207 tests (18 files), and 3/3 P2 discrimination mutations (`M4`–`M6`) killed in an isolated worktree.
-T29-T32 implement P3 Bubble Up (`BUBBLE-01`), Read Together (`READ-01`), and Spy-pixel blocker (`SPY-01`). Full build + lint + 214 tests passed across 18 files; independent P3 verification remains pending.
+T29-T32 implement P3 Bubble Up (`BUBBLE-01`), Read Together (`READ-01`), and Spy-pixel blocker (`SPY-01`). Independent P3 Verifier (`author != verifier`) confirmed PASS across all 30/30 P1+P2+P3 requirements, 214 tests across 18 files, and 9/9 total discrimination mutations (`M1`–`M9`) killed in an isolated worktree.
 
 ---
 
@@ -358,7 +358,8 @@ T29-T32 implement P3 Bubble Up (`BUBBLE-01`), Read Together (`READ-01`), and Spy
 
 How we know the feature is successful:
 
-- [ ] A user can triage a seeded Imbox end-to-end: open new mail, screen a sender, reply-later, set-aside, and read the Feed — without a page reload breaking state.
-- [ ] All five P1 stories are independently demoable from their own route.
-- [ ] A HEY user shown the prototype recognizes the Imbox New/Seen split, The Screener, the bottom-docked piles, and The Feed as HEY-like.
-- [ ] Zero unhandled runtime errors while exercising the P1 flows over the bundled seed.
+- [x] A user can triage a seeded Imbox end-to-end: open new mail, screen a sender, reply-later, set-aside, and read the Feed — without a page reload breaking state.
+- [x] All five P1 stories are independently demoable from their own route.
+- [x] A HEY user shown the prototype recognizes the Imbox New/Seen split, The Screener, the bottom-docked piles, and The Feed as HEY-like.
+- [x] Zero unhandled runtime errors while exercising the P1 flows over the bundled seed.
+

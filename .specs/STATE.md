@@ -37,20 +37,21 @@
 ## Handoff
 
 - **Feature**: hey-mail-reader (`.specs/features/hey-mail-reader/`)
-- **Phase / Task**: Execute complete (P1 + P2). T1–T28 committed; independent P1+P2 verification PASS (207 tests across 18 files, 6/6 discrimination mutations killed).
+- **Phase / Task**: Execute & Validate complete (P1 + P2 + P3). T1–T32 committed; independent P1+P2+P3 verification PASS (30/30 requirements Verified, 214 tests across 18 files, 9/9 discrimination mutations killed).
 - **Completed**:
   - **P1 (`T1`–`T23`)**: Imbox, Screener, Reply Later + Focus & Reply, Set Aside, Feed, keyboard shortcuts, storage/schema resilience, and F1–F3 repairs.
-  - **P2 (`T24`–`T28`)**:
-    - `T24` (`ac0f194`): Added `Sender.bundled?: boolean`, `DisplayEntry`, and `SET_BUNDLE` action in `src/domain/types.ts`.
-    - `T25` (`fb6c202`): Routed approved `receipt` senders to `paperTrail` with `personal > receipt > newsletter` precedence, added `selectPaperTrail(state, query?)`, and enabled pile support for `paperTrail`.
-    - `T26` (`3cadcbf`): Added `SET_BUNDLE` reducer case, `selectDisplayEntries(state, emails)` bundle collapsing selector, and boolean `bundled` validation in `normalizeState()`.
-    - `T27` (`2cb7ec2`): Built `PaperTrailView` with real-time sender/address/subject search, clearable no-match state, `/paper-trail` route in `AppShell`, and `Return to Paper Trail` in `ReturnToBox`.
-    - `T28` (`4be27f0`): Added `BundleRow`, `EmailList`, and sender bundle toggle controls in `src/features/common/index.tsx`, wired into `ImboxView` (per group) and `PaperTrailView`.
+  - **P2 (`T24`–`T28`)**: Paper Trail (`PAPER-01`, `PAPER-02`) and Sender Bundles (`BNDL-01`, `BNDL-02`).
+  - **P3 (`T29`–`T32`)**:
+    - `T29` (`cf0dace`): Added `Email.bubbledUntil?: string | null`, `BUBBLE_UP` / `BUBBLE_RELEASE` actions, `selectBubbledUp(state)`, and `bubbledUntil` ISO date validation in `normalizeState()`.
+    - `T30` (`9285b5d`): Added `detectTrackingPixels(raw)` and spy-pixel `<img>` stripping in `sanitizeHtml(raw)` (`src/lib/sanitize.ts`), plus seeded tracker marker in `src/data/seed.json`.
+    - `T31` (`cc884b0`): Added `Bubble Up` action in `MailActions`, `Bubbled Up` scheduling tray with `Release bubbled mail` in `ImboxView`, multi-select checkboxes, and `ReadTogetherReader` stacked scrollable view (`BUBBLE-01`, `READ-01`).
+    - `T32` (`e50e010`): Surfaced `Spy pixel blocked` notice and `Tracker flagged` sender badge in `MailReader`, `EmailRow`, and `FeedView` (`SPY-01`).
 - **In-progress** (file:line): none
-- **Next step**: P1 and P2 are complete and verified. P3 (`BUBBLE-01`, `READ-01`, `SPY-01`) remains deferred until requested. Run `npm run dev` to explore the prototype.
+- **Next step**: All planned phases (`P1`, `P2`, `P3` — 30/30 requirements, `T1`–`T32`) are complete and independently verified. Run `npm run dev` to explore the full application or specify a new feature.
 - **Blockers**: none
 - **Uncommitted files**: `.agents/` workspace skill customization remains intentionally untracked outside implementation commits (same as `.github/`).
 - **Branch**: master; local only, no push/deploy
-- **Gates**: Full build (`tsc -b && vite build`), ESLint (`eslint .`), and Vitest (`npx vitest run` -> 207 passed across 18 test files, 0 failed/skipped) all pass. Deterministic validators `validate_spec.py`, `validate_tasks.py`, and `validate_state.py` pass with 0 errors.
-- **Validation scope**: Independent P2 Verifier (`author != verifier`) verified HEAD `4be27f0`, 27/27 P1+P2 ACs (`IMBOX-01..05`, `SCRN-01..05`, `REPLY-01..05`, `ASIDE-01..04`, `FEED-01..04`, `PAPER-01..02`, `BNDL-01..02`), 5/5 edge cases, and killed 3/3 P2 mutations (`M4`–`M6`) in a disposable worktree (`/tmp/missiva-verifier-sensor`).
+- **Gates**: Full build (`tsc -b && vite build`), ESLint (`eslint .`), and Vitest (`npx vitest run` -> 214 passed across 18 test files, 0 failed/skipped) all pass. Deterministic validators `validate_spec.py`, `validate_tasks.py`, and `validate_state.py` pass with 0 errors.
+- **Validation scope**: Independent P3 Verifier (`author != verifier`) verified HEAD `e50e010`, 30/30 P1+P2+P3 ACs (`IMBOX-01..05`, `SCRN-01..05`, `REPLY-01..05`, `ASIDE-01..04`, `FEED-01..04`, `PAPER-01..02`, `BNDL-01..02`, `BUBBLE-01`, `READ-01`, `SPY-01`), 6/6 edge cases, and killed 9/9 mutations (`M1`–`M9`) in a disposable worktree (`/tmp/missiva-verifier-sensor`).
+
 
