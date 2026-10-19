@@ -1679,16 +1679,28 @@ T29 → T30 → T31 → T32
 
 **Done when**:
 
-- [ ] `detectTrackingPixels(raw)` identifies `1x1` / tracker URL / `data-spy-pixel` images while ignoring normal inline images (`SPY-01`)
-- [ ] `sanitizeHtml(raw)` removes tracking-pixel `<img>` tags from rendered HTML while preserving normal `<img>` tags (`SPY-01`)
-- [ ] Bundled `src/data/seed.json` includes a seeded tracking-pixel marker for demo verification
-- [ ] Gate check passes: `npm test`
-- [ ] Unit tests in `src/lib/sanitize.test.ts` and `src/data/seed.test.ts` cover tracking-pixel detection, stripping, and seeded tracker presence
+- [x] `detectTrackingPixels(raw)` identifies `1x1` / tracker URL / `data-spy-pixel` images while ignoring normal inline images (`SPY-01`)
+- [x] `sanitizeHtml(raw)` removes tracking-pixel `<img>` tags from rendered HTML while preserving normal `<img>` tags (`SPY-01`)
+- [x] Bundled `src/data/seed.json` includes a seeded tracking-pixel marker for demo verification
+- [x] Gate check passes: `npm test`
+- [x] Unit tests in `src/lib/sanitize.test.ts` and `src/data/seed.test.ts` cover tracking-pixel detection, stripping, and seeded tracker presence
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(privacy): detect and strip tracking pixels in email sanitizer`
+
+**Execution evidence (T30)**: RED (2 failing tests across `sanitize.test.ts` and `seed.test.ts`), then `npx vitest run src/lib/sanitize.test.ts src/data/seed.test.ts`: 10 passed, 0 failed.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Spy-pixel detection & stripping (`SPY-01`) | `src/lib/sanitize.test.ts:41-51` `expect(detectTrackingPixels(tracked)).toBe(2)`; `expect(sanitizeHtml(tracked)).toBe('<p>Newsletter intro</p><img src="https://images.example/diagram.png" alt="Diagram">')` | Detects and strips spy-pixel images while preserving normal images | Yes |
+| Seeded tracking pixel marker | `src/data/seed.test.ts:48` `expect(Object.values(seed.emails).some((email) => detectTrackingPixels(email.bodyHtml) > 0)).toBe(true)` | Bundled seed contains at least one tracking pixel for demo verification | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `sanitize.test.ts:41-51` | `SPY-01` sanitizer | Yes |
+| `seed.test.ts:48` | `SPY-01` demo seed | Yes |
 
 ---
 

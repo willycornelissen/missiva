@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildSeedState, seed } from './seed'
 import { SCHEMA_VERSION } from '../domain/types'
+import { detectTrackingPixels } from '../lib/sanitize'
 
 describe('bundled demo mailbox (T3)', () => {
   it('has 40 complete emails with valid sender references and receive order', () => {
@@ -44,6 +45,8 @@ describe('bundled demo mailbox (T3)', () => {
         expect(email.originBox).toBe('paperTrail')
       }
     }
+    expect(Object.values(seed.emails).some((email) => detectTrackingPixels(email.bodyHtml) > 0)).toBe(true)
     expect(buildSeedState()).toEqual(seed)
   })
 })
+

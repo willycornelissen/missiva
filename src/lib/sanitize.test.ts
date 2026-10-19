@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { sanitizeHtml } from './sanitize'
+import { detectTrackingPixels, sanitizeHtml } from './sanitize'
 
 describe('email body sanitization', () => {
   it('strips scripts, event handlers, and embedded executable content while keeping the message', () => {
@@ -37,4 +37,17 @@ describe('email body sanitization', () => {
     expect(sanitizeHtml('Hello there.\nSee you tomorrow.')).toBe('Hello there.\nSee you tomorrow.')
     expect(sanitizeHtml('')).toBe('')
   })
+
+  it('detects and strips spy-pixel tracking images while preserving ordinary images (SPY-01)', () => {
+    const tracked = '<p>Newsletter intro</p>' +
+      '<img src="https://pixel.tracker.example/open.gif?id=42" width="1" height="1" alt="">' +
+      '<img src="https://images.example/diagram.png" alt="Diagram">' +
+      '<img src="https://analytics.example/beacon?u=1">'
+    expect(detectTrackingPixels(tracked)).toBe(2)
+    expect(detectTrackingPixels('<p>No trackers</p><img src="https://images.example/diagram.png" alt="Diagram">')).toBe(0)
+    expect(sanitizeHtml(tracked)).toBe(
+      '<p>Newsletter intro</p><img src="https://images.example/diagram.png" alt="Diagram">',
+    )
+  })
 })
+
