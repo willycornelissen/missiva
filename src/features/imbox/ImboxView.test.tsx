@@ -73,5 +73,63 @@ describe('Imbox', () => {
       'Older unseen note',
     ])
   })
+
+  it('bubbles up an email until a scheduled time and returns it to the top of New for you when released (BUBBLE-01)', async () => {
+    const user = userEvent.setup()
+    const olderSeen = message('older-seen', { subject: 'Follow up on contract', seen: true, receivedAt: '2026-10-08T09:00:00.000Z' })
+    const newerNew = message('newer-new', { subject: 'Latest update', seen: false, receivedAt: '2026-10-10T09:00:00.000Z' })
+    const { storedState } = renderMailbox(mailbox([olderSeen, newerNew]))
+
+    const seenSection = screen.getByRole('region', { name: 'Previously seen' })
+    expect(within(seenSection).getByRole('article', { name: 'Follow up on contract' })).toBeVisible()
+
+    await user.click(within(seenSection).getByRole('button', { name: 'Bubble up: Follow up on contract' }))
+    expect(storedState().emails['older-seen'].bubbledUntil).toBeTruthy()
+    expect(within(seenSection).queryByRole('article', { name: 'Follow up on contract' })).not.toBeInTheDocument()
+
+    const bubbledTray = screen.getByRole('region', { name: 'Bubbled Up' })
+    expect(within(bubbledTray).getByText('Follow up on contract')).toBeVisible()
+
+    await user.click(within(bubbledTray).getByRole('button', { name: 'Release bubbled mail' }))
+    expect(screen.queryByRole('region', { name: 'Bubbled Up' })).not.toBeInTheDocument()
+
+    const freshSection = screen.getByRole('region', { name: 'New for you' })
+    expect(within(freshSection).getAllByRole('article').map((el) => el.getAttribute('aria-label'))).toEqual([
+      'Follow up on contract',
+      'Latest update',
+    ])
+    expect(storedState().emails['older-seen'].seen).toBe(false)
+    expect(storedState().emails['older-seen'].bubbledUntil).toBeFalsy()
+  })
+
+  it('opens multiple selected emails stacked in a single Read Together scrollable view and marks them seen (READ-01)', async () => {
+    const user = userEvent.setup()
+    const first = message('first', { subject: 'First briefing', bodyHtml: '<p>Body of first briefing</p>', receivedAt: '2026-10-10T11:00:00.000Z' })
+    const second = message('second', { subject: 'Second briefing', bodyHtml: '<p>Body of second briefing</p><script>alert(1)</script>', receivedAt: '2026-10-10T10:00:00.000Z' })
+    const third = message('third', { subject: 'Third briefing', bodyHtml: '<p>Body of third briefing</p>', receivedAt: '2026-10-10T09:00:00.000Z' })
+    const { storedState } = renderMailbox(mailbox([first, second, third]))
+
+    await user.click(screen.getByRole('checkbox', { name: 'Select First briefing' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Select Second briefing' }))
+
+    await user.click(screen.getByRole('button', { name: 'Read together (2)' }))
+
+    const reader = screen.getByRole('region', { name: 'Read Together' })
+    const articles = within(reader).getAllByRole('article')
+    expect(articles.map((el) => el.getAttribute('aria-label'))).toEqual([
+      'First briefing',
+      'Second briefing',
+    ])
+    expect(within(reader).getByText('Body of first briefing')).toBeVisible()
+    expect(within(reader).getByText('Body of second briefing')).toBeVisible()
+    expect(reader.querySelector('script')).toBeNull()
+    expect(storedState().emails.first.seen).toBe(true)
+    expect(storedState().emails.second.seen).toBe(true)
+    expect(storedState().emails.third.seen).toBe(false)
+
+    await user.click(within(reader).getByRole('button', { name: 'Back to mail' }))
+    expect(screen.queryByRole('region', { name: 'Read Together' })).not.toBeInTheDocument()
+  })
 })
+
 

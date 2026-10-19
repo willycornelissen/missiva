@@ -1719,15 +1719,27 @@ T29 → T30 → T31 → T32
 
 **Done when**:
 
-- [ ] Clicking `Bubble up` hides the email into the `Bubbled Up` tray and clicking `Release bubbled mail` returns it to the top of `New for you` (`BUBBLE-01`)
-- [ ] Selecting multiple emails and clicking `Read Together` renders all selected emails stacked in one scrollable view and marks them seen (`READ-01`)
-- [ ] Gate check passes: `npm test`
-- [ ] Component tests in `src/features/imbox/ImboxView.test.tsx` cover `BUBBLE-01` and `READ-01`
+- [x] Clicking `Bubble up` hides the email into the `Bubbled Up` tray and clicking `Release bubbled mail` returns it to the top of `New for you` (`BUBBLE-01`)
+- [x] Selecting multiple emails and clicking `Read Together` renders all selected emails stacked in one scrollable view and marks them seen (`READ-01`)
+- [x] Gate check passes: `npm test`
+- [x] Component tests in `src/features/imbox/ImboxView.test.tsx` cover `BUBBLE-01` and `READ-01`
 
 **Tests**: unit
 **Gate**: quick
 
 **Commit**: `feat(imbox): add bubble up scheduling tray and read together view`
+
+**Execution evidence (T31)**: RED (2 failing tests in `ImboxView.test.tsx`), then `npx vitest run src/features/imbox/ImboxView.test.tsx`: 6 passed, 0 failed.
+
+| Criterion (A) | Exact assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| Bubble Up tray & release (`BUBBLE-01`) | `src/features/imbox/ImboxView.test.tsx:86-102` `expect(within(bubbledTray).getByText('Follow up on contract')).toBeVisible()`; `expect(within(freshSection).getAllByRole('article').map((el) => el.getAttribute('aria-label'))).toEqual(['Follow up on contract', 'Latest update'])` | Hides email into Bubbled Up tray and returns it to top of New for you as unseen on release | Yes |
+| Read Together batch view (`READ-01`) | `src/features/imbox/ImboxView.test.tsx:112-128` `expect(articles.map((el) => el.getAttribute('aria-label'))).toEqual(['First briefing', 'Second briefing'])`; `expect(storedState().emails.first.seen).toBe(true)`; `expect(storedState().emails.second.seen).toBe(true)` | Renders selected emails stacked in one scrollable view and marks them seen | Yes |
+
+| Assertions (C) | Maps to | Keep |
+| --- | --- | --- |
+| `ImboxView.test.tsx:77-103` | `BUBBLE-01` UI | Yes |
+| `ImboxView.test.tsx:105-132` | `READ-01` UI | Yes |
 
 ---
 

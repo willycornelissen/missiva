@@ -32,7 +32,11 @@
 .bundleCount { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--purple-soft); color: var(--purple); font-size: 10px; font-weight: 700; }
 .bundleChevron { font-size: 11px; color: var(--purple); }
 .bundleItems { border-top: 1px dashed #e6e3d8; padding-left: 18px; background: #faf8f1; }
+.selectCheck { margin-left: 14px; accent-color: var(--purple); cursor: pointer; flex: none; }
 .reader { background: white; border: 1px solid var(--line); border-radius: 14px; padding: 30px; margin-bottom: 25px; box-shadow: 0 3px 15px #29282204; }
+.readTogetherList { display: grid; gap: 28px; }
+.readTogetherItem { padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+.readTogetherItem:last-child { padding-bottom: 0; border-bottom: 0; }
 .readerToolbar { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 25px; }
 .back { background: none; border: 0; color: var(--purple); padding: 6px 0; font-size: 12px; }
 .readerTitle { font-family: Georgia, serif; font-size: 30px; font-weight: 400; line-height: 1.25; }

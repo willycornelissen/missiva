@@ -11,11 +11,14 @@ export function Avatar({ sender }: { sender: Sender }) {
   return <span aria-hidden="true" className={styles.avatar} data-tone={sender.id.charCodeAt(0) % 4}>{initials}</span>
 }
 
-export function EmailRow({ email, sender, onOpen, selected = false, onSelect }: {
+export function EmailRow({ email, sender, onOpen, selected = false, onSelect, checked = false, onToggleSelect }: {
   email: Email; sender: Sender; onOpen: () => void; selected?: boolean; onSelect?: () => void
+  checked?: boolean; onToggleSelect?: () => void
 }) {
   return <article aria-label={email.subject} data-mail-id={email.id} data-selected={selected}
     className={`${styles.row} ${email.seen ? styles.seen : ''}`} onFocus={onSelect}>
+    {onToggleSelect && <input type="checkbox" className={styles.selectCheck}
+      aria-label={`Select ${email.subject}`} checked={checked} onChange={onToggleSelect} />}
     <button className={styles.openRow} onClick={onOpen} aria-label={`Open ${email.subject}`}>
       <Avatar sender={sender} />
       <span className={styles.rowContent}><span className={styles.sender}>{sender.name}</span>
@@ -30,9 +33,10 @@ export function EmailRow({ email, sender, onOpen, selected = false, onSelect }: 
   </article>
 }
 
-export function BundleRow({ sender, emails, latest, selectedId, onSelect, onOpen }: {
+export function BundleRow({ sender, emails, latest, selectedId, onSelect, onOpen, checkedIds, onToggleSelect }: {
   sender: Sender; emails: Email[]; latest: Email; selectedId?: string | null
   onSelect: (emailId: string) => void; onOpen: (email: Email) => void
+  checkedIds?: string[]; onToggleSelect?: (emailId: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const dispatch = useDispatch()
@@ -59,20 +63,24 @@ export function BundleRow({ sender, emails, latest, selectedId, onSelect, onOpen
     </div>
     {expanded && <div className={styles.bundleItems} role="group" aria-label={`Bundled emails from ${sender.name}`}>
       {emails.map((email) => <EmailRow key={email.id} email={email} sender={sender}
-        selected={selectedId === email.id} onSelect={() => onSelect(email.id)} onOpen={() => onOpen(email)} />)}
+        selected={selectedId === email.id} onSelect={() => onSelect(email.id)} onOpen={() => onOpen(email)}
+        checked={checkedIds?.includes(email.id)} onToggleSelect={onToggleSelect ? () => onToggleSelect(email.id) : undefined} />)}
     </div>}
   </article>
 }
 
-export function EmailList({ emails, selectedId, onSelect, onOpen }: {
+export function EmailList({ emails, selectedId, onSelect, onOpen, checkedIds, onToggleSelect }: {
   emails: Email[]; selectedId?: string | null; onSelect: (emailId: string) => void; onOpen: (email: Email) => void
+  checkedIds?: string[]; onToggleSelect?: (emailId: string) => void
 }) {
   const state = useAppState()
   return <>{selectDisplayEntries(state, emails).map((entry) => entry.kind === 'email'
     ? <EmailRow key={entry.email.id} email={entry.email} sender={entry.sender}
-        selected={selectedId === entry.email.id} onSelect={() => onSelect(entry.email.id)} onOpen={() => onOpen(entry.email)} />
+        selected={selectedId === entry.email.id} onSelect={() => onSelect(entry.email.id)} onOpen={() => onOpen(entry.email)}
+        checked={checkedIds?.includes(entry.email.id)} onToggleSelect={onToggleSelect ? () => onToggleSelect(entry.email.id) : undefined} />
     : <BundleRow key={`bundle-${entry.sender.id}`} sender={entry.sender} emails={entry.emails}
-        latest={entry.latest} selectedId={selectedId} onSelect={onSelect} onOpen={onOpen} />)}</>
+        latest={entry.latest} selectedId={selectedId} onSelect={onSelect} onOpen={onOpen}
+        checkedIds={checkedIds} onToggleSelect={onToggleSelect} />)}</>
 }
 
 export function MailActions({ email, compact = false, onDone }: { email: Email; compact?: boolean; onDone?: () => void }) {
@@ -84,6 +92,9 @@ export function MailActions({ email, compact = false, onDone }: { email: Email; 
       onClick={() => { dispatch({ type: 'REPLY_LATER', emailId: email.id }); onDone?.() }}><span aria-hidden="true">↩</span>{!compact && ' Reply Later'}</button>
     <button className={styles.action} aria-label={`Set aside: ${email.subject}`} title="Set aside (e)"
       onClick={() => { dispatch({ type: 'SET_ASIDE', emailId: email.id }); onDone?.() }}><span aria-hidden="true">▱</span>{!compact && ' Set Aside'}</button>
+    {canBundle && <button className={styles.action} aria-label={`Bubble up: ${email.subject}`} title="Bubble up"
+      onClick={() => { dispatch({ type: 'BUBBLE_UP', emailId: email.id, until: new Date(Date.now() + 86_400_000).toISOString() }); onDone?.() }}>
+      <span aria-hidden="true">🫧</span>{!compact && ' Bubble Up'}</button>}
     {canBundle && <button className={styles.action} aria-label={`${sender.bundled ? 'Unbundle' : 'Bundle'} ${sender.name}`}
       title={`${sender.bundled ? 'Unbundle' : 'Bundle'} ${sender.name}`}
       onClick={() => dispatch({ type: 'SET_BUNDLE', senderId: sender.id, bundled: !sender.bundled })}>
@@ -111,6 +122,27 @@ export function MailReader({ email, onClose }: { email: Email; onClose: () => vo
     <div className={styles.senderDetail}><Avatar sender={sender} /><div><strong>{sender.name}</strong><span>{sender.address}</span></div>
       <time dateTime={email.receivedAt}>{new Date(email.receivedAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</time></div>
     <EmailBody email={email} />
+  </section>
+}
+
+export function ReadTogetherReader({ emails, onClose }: { emails: Email[]; onClose: () => void }) {
+  const state = useAppState()
+  return <section className={styles.reader} aria-label="Read Together">
+    <div className={styles.readerToolbar}>
+      <button className={styles.back} aria-label="Back to mail" onClick={onClose}>← Back to mail</button>
+      <strong>Reading {emails.length} emails together</strong>
+    </div>
+    <div className={styles.readTogetherList}>
+      {emails.map((email) => {
+        const sender = state.senders[email.senderId]
+        return <article key={email.id} aria-label={email.subject} className={styles.readTogetherItem}>
+          <h2 className={styles.readerTitle}>{email.subject || '(No subject)'}</h2>
+          <div className={styles.senderDetail}><Avatar sender={sender} /><div><strong>{sender.name}</strong><span>{sender.address}</span></div>
+            <time dateTime={email.receivedAt}>{new Date(email.receivedAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</time></div>
+          <EmailBody email={email} />
+        </article>
+      })}
+    </div>
   </section>
 }
 

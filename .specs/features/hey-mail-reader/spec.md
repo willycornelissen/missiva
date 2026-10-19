@@ -271,15 +271,15 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | PAPER-02 | P2: Paper Trail | T25 core + T27 UI | Verified |
 | BNDL-01 | P2: Bundles | T24 types + T26 core + T28 UI | Verified |
 | BNDL-02 | P2: Bundles | T24 types + T26 core + T28 UI | Verified |
-| BUBBLE-01 | P3: Bubble Up | T29 core complete / T31 UI | Implementing |
-| READ-01 | P3: Read Together | T31 UI | Implementing |
+| BUBBLE-01 | P3: Bubble Up | T29 core + T31 UI complete | Implementing |
+| READ-01 | P3: Read Together | T31 UI complete | Implementing |
 | SPY-01 | P3: Spy-pixel blocker | T30 sanitizer + seed complete / T32 UI | Implementing |
 
 **ID format:** `[CATEGORY]-[NUMBER]` (e.g., `IMBOX-01`, `SCRN-03`).
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 30 total; 27 P1/P2 requirements Verified; 3 P3 requirements Implementing (T29–T30 complete).
+**Coverage:** 30 total; 27 P1/P2 requirements Verified; 3 P3 requirements Implementing (T29–T31 complete).
 
 **Execution history:** The entries below preserve each task's result at its
 commit; references to pending work are historical, superseded by the final
